@@ -7,40 +7,36 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root { --fcapt-green: #2d5a27; --accent-gold: #c5a059; --danger: #d32f2f; }
-        body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; margin: 0; }
+        body { font-family: 'Inter', sans-serif; background: #f4f7f6; margin: 0; }
         .header { background: var(--fcapt-green); color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--accent-gold); }
         .container { max-width: 800px; margin: 2rem auto; padding: 0 20px; }
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .course-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #eee; }
-        .progress-bg { background: #eee; border-radius: 10px; height: 10px; width: 150px; overflow: hidden; margin-left: 15px; }
-        .progress-fill { background: var(--fcapt-green); height: 100%; width: 0%; transition: width 0.8s; }
-        .warning-label { color: var(--danger); font-weight: bold; font-size: 0.75rem; display: block; margin-top: 4px; }
-        select, .btn-checkin { width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #ddd; font-size: 1rem; margin-top: 10px; }
-        .btn-checkin { background: var(--fcapt-green); color: white; border: none; font-weight: 700; cursor: pointer; }
-        .btn-checkin:disabled { background: #ccc; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .course-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
+        .progress-bar { background: #eee; border-radius: 5px; height: 8px; width: 120px; overflow: hidden; margin-left: 10px; }
+        .progress-inner { background: var(--fcapt-green); height: 100%; width: 0%; transition: width 0.5s; }
+        .risk { color: var(--danger); font-size: 0.75rem; font-weight: 700; }
+        select, button { width: 100%; padding: 12px; margin-top: 10px; border-radius: 6px; }
+        button { background: var(--fcapt-green); color: white; border: none; font-weight: 700; cursor: pointer; }
     </style>
 </head>
 <body>
-
     <header class="header">
         <div>
-            <h2 style="margin:0" id="user-name">Loading...</h2>
-            <small id="week-display">Calculating Semester Week...</small>
+            <h2 style="margin:0" id="user-name">...</h2>
+            <small id="week-text">Week --</small>
         </div>
-        <button onclick="logout()" style="background:none; border:1px solid white; color:white; padding:5px 15px; cursor:pointer; border-radius:4px;">Logout</button>
+        <button onclick="logout()" style="background:none; border:1px solid white; color:white; padding:5px 10px; cursor:pointer; width:auto;">Logout</button>
     </header>
 
     <main class="container">
         <div class="card">
-            <h3 style="margin-top:0">Course Attendance Overview</h3>
-            <div id="course-list">Loading courses and percentages...</div>
+            <h3 style="margin-top:0">My Attendance</h3>
+            <div id="attendance-list">Loading...</div>
         </div>
-
         <div class="card">
-            <h3 style="margin-top:0">Mark Attendance</h3>
-            <label style="font-size:0.9rem; font-weight:600;">Select Current Course:</label>
-            <select id="course-select"><option value="">-- Choose Course --</option></select>
-            <button id="checkin-btn" class="btn-checkin" onclick="markAttendance()">Submit Check-In</button>
+            <h3>Mark Attendance</h3>
+            <select id="course-select"><option value="">-- Select Course --</option></select>
+            <button onclick="markAtt()">Check In</button>
         </div>
     </main>
 
@@ -49,99 +45,51 @@
         const SB_URL = 'https://loblicverqcijkqatvhs.supabase.co';
         const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvYmxpY3ZlcnFjaWprcWF0dmhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMTAyOTYsImV4cCI6MjA5MTY4NjI5Nn0.vV-rpPzniYgSTzBStfikL_SJc722-41ezkiJnI4nOPs';
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
-
         const user = JSON.parse(localStorage.getItem('fcapt_user'));
+
         let currentWeek = 1;
-        let totalSemesterWeeks = 12;
+        let totalWeeks = 12;
 
         async function init() {
-            if (!user) { window.location.href = 'index.html'; return; }
+            if (!user) window.location.href = 'index.html';
             document.getElementById('user-name').innerText = user.full_name;
-            
-            try {
-                // 1. Fetch Global Dates
-                const { data: settings } = await supabaseClient.from('settings').select('*').eq('id', 1).single();
-                
-                if (settings) {
-                    const start = new Date(settings.resumption_date);
-                    const end = new Date(settings.semester_end_date);
-                    const today = new Date();
-                    
-                    currentWeek = Math.ceil((today - start) / (7 * 24 * 60 * 60 * 1000));
-                    totalSemesterWeeks = Math.ceil((end - start) / (7 * 24 * 60 * 60 * 1000));
-                    
-                    if (currentWeek < 1) currentWeek = 1;
-                    document.getElementById('week-display').innerText = `Week ${currentWeek} of ${totalSemesterWeeks}`;
-                }
 
-                loadCourseAttendance();
-                fetchCoursesDropdown();
+            const { data: settings } = await supabaseClient.from('settings').select('*').single();
+            const start = new Date(settings.resumption_date);
+            const end = new Date(settings.semester_end_date);
+            totalWeeks = Math.ceil((end - start) / (7 * 24 * 60 * 60 * 1000));
+            currentWeek = Math.max(1, Math.ceil((new Date() - start) / (7 * 24 * 60 * 60 * 1000)));
+            document.getElementById('week-text').innerText = `Week ${currentWeek} of ${totalWeeks}`;
 
-            } catch (err) {
-                console.error("Init failed", err);
-            }
+            loadData();
         }
 
-        async function fetchCoursesDropdown() {
-            const { data } = await supabaseClient.from('courses').select('id, course_code');
-            const select = document.getElementById('course-select');
-            if (data) {
-                select.innerHTML = '<option value="">-- Choose Course --</option>';
-                data.forEach(c => { select.innerHTML += `<option value="${c.id}">${c.course_code}</option>`; });
-            }
-        }
-
-        async function loadCourseAttendance() {
+        async function loadData() {
             const { data: courses } = await supabaseClient.from('courses').select('*');
-            const { data: attendance } = await supabaseClient.from('attendance').select('course_id').eq('student_id', user.id);
+            const { data: att } = await supabaseClient.from('attendance').select('course_id').eq('student_id', user.id);
             
-            const list = document.getElementById('course-list');
+            const list = document.getElementById('attendance-list');
+            const sel = document.getElementById('course-select');
             list.innerHTML = '';
+            sel.innerHTML = '<option value="">-- Select Course --</option>';
 
-            courses.forEach(course => {
-                const count = attendance ? attendance.filter(a => a.course_id === course.id).length : 0;
-                const percent = Math.round((count / totalSemesterWeeks) * 100);
-                const isRisk = percent < 75 && currentWeek >= 9;
-                
+            courses.forEach(c => {
+                const count = att.filter(a => a.course_id === c.id).length;
+                const p = Math.round((count / totalWeeks) * 100);
                 list.innerHTML += `
-                    <div class="course-row">
-                        <div>
-                            <strong>${course.course_code}</strong><br>
-                            <span style="font-size:0.8rem; color:#666;">${course.course_title}</span>
-                            ${isRisk ? '<span class="warning-label">Eligibility Risk</span>' : ''}
-                        </div>
-                        <div style="display:flex; align-items:center;">
-                            <span style="font-weight:700;">${percent}%</span>
-                            <div class="progress-bg">
-                                <div class="progress-fill" style="width:${percent}%"></div>
-                            </div>
-                        </div>
+                    <div class="course-item">
+                        <div><strong>${c.course_code}</strong><br>${p < 75 && currentWeek >= 9 ? '<span class="risk">SHORTFALL</span>' : ''}</div>
+                        <div style="display:flex; align-items:center;"><span>${p}%</span><div class="progress-bar"><div class="progress-inner" style="width:${p}%"></div></div></div>
                     </div>`;
+                sel.innerHTML += `<option value="${c.id}">${c.course_code}</option>`;
             });
         }
 
-        async function markAttendance() {
+        async function markAtt() {
             const cid = document.getElementById('course-select').value;
-            if(!cid) return alert("Please select a course!");
-
-            const btn = document.getElementById('checkin-btn');
-            btn.disabled = true;
-            btn.innerText = "Checking in...";
-
-            const { error } = await supabaseClient.from('attendance').insert([{ 
-                student_id: user.id, 
-                course_id: cid, 
-                week_number: currentWeek 
-            }]);
-
-            if(!error) { 
-                alert("Attendance Marked for Week " + currentWeek); 
-                loadCourseAttendance(); 
-            } else {
-                alert("Error: " + error.message);
-            }
-            btn.disabled = false;
-            btn.innerText = "Submit Check-In";
+            if(!cid) return alert("Pick a course");
+            const { error } = await supabaseClient.from('attendance').insert([{ student_id: user.id, course_id: cid, week_number: currentWeek }]);
+            if(!error) { alert("Success!"); loadData(); }
         }
 
         function logout() { localStorage.clear(); window.location.href = 'index.html'; }
