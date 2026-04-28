@@ -1,120 +1,114 @@
+/* --- 1. THEME VARIABLES --- */
 :root {
-    --fcapt-green: #2d5a27;
-    --fcapt-light-green: #eef5ee;
-    --text-dark: #333;
-    --white: #ffffff;
-    --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    --fcapt-primary: #1e4620;
+    --fcapt-primary-hover: #2d6630;
+    --fcapt-bg: #f8fafc;
+    --card-bg: #ffffff;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    --danger: #be123c;
+    --success: #15803d;
 }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+/* Dark Mode Overrides */
+[data-theme="dark"] {
+    --fcapt-bg: #0f172a;
+    --card-bg: #1e293b;
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+    --border-color: #334155;
 }
 
+/* --- 2. BASE STYLES --- */
 body {
     font-family: 'Inter', sans-serif;
-    background-color: #f4f7f6;
-    color: var(--text-dark);
-    line-height: 1.6;
+    background: var(--fcapt-bg);
+    color: var(--text-main);
+    margin: 0;
+    transition: background 0.3s, color 0.3s;
 }
 
-/* Header Branding */
-.main-header {
-    background-color: var(--fcapt-green);
-    color: var(--white);
-    padding: 1rem 0;
-    box-shadow: var(--shadow);
-}
-
-.header-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+.container {
+    max-width: 1100px;
+    margin: 2rem auto;
     padding: 0 20px;
 }
 
-.logo-section {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.header-logo {
-    height: 50px;
-    width: auto;
-    background: white; /* Temporary background for visibility if logo is transparent */
-    border-radius: 5px;
-}
-
-.header-title {
-    font-size: 1.4rem;
-    font-weight: 700;
-}
-
-/* Login Card */
-.container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 80vh;
-}
-
-.login-card {
-    background: var(--white);
-    padding: 2.5rem;
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
     border-radius: 12px;
-    box-shadow: var(--shadow);
-    width: 100%;
-    max-width: 400px;
+    padding: 25px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-.login-card h2 {
-    margin-bottom: 0.5rem;
-    color: var(--fcapt-green);
-}
+/* --- 3. FORM ELEMENTS --- */
+label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.85rem; color: var(--text-muted); }
 
-.input-group {
-    margin-top: 1.5rem;
-}
-
-.input-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: 600;
-    font-size: 0.9rem;
-}
-
-.input-group input {
+input, select {
     width: 100%;
     padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
+    border: 1.5px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--card-bg);
+    color: var(--text-main);
+    box-sizing: border-box;
     font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s;
 }
 
-.btn-primary {
-    width: 100%;
-    background-color: var(--fcapt-green);
+input:focus, select:focus { border-color: var(--fcapt-primary); }
+
+.btn {
+    background: var(--fcapt-primary);
     color: white;
-    padding: 12px;
+    padding: 12px 24px;
     border: none;
-    border-radius: 6px;
-    margin-top: 2rem;
-    font-weight: 600;
+    border-radius: 8px;
+    font-weight: 700;
     cursor: pointer;
-    transition: background 0.3s;
+    transition: 0.2s;
 }
 
-.btn-primary:hover {
-    background-color: #23471e;
+.btn:hover { background: var(--fcapt-primary-hover); }
+
+/* --- 4. TABLE STYLES --- */
+table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+th, td { text-align: left; padding: 14px; border-bottom: 1px solid var(--border-color); }
+th { background: rgba(0,0,0,0.02); color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; }
+
+/* --- 5. MOBILE VIEW --- */
+@media (max-width: 768px) {
+    .header { flex-direction: column; text-align: center; gap: 15px; padding: 1.5rem; }
+    
+    .grid { grid-template-columns: 1fr !important; gap: 15px; }
+    
+    /* Responsive Table: adds horizontal scroll on small screens */
+    .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    
+    .card { padding: 15px; }
+    
+    input, select, .btn { font-size: 16px; /* Prevents mobile browser zoom-in */ }
 }
 
-.main-footer {
-    text-align: center;
-    padding: 20px;
-    font-size: 0.8rem;
-    color: #888;
+/* --- 6. FLOATING THEME TOGGLE --- */
+.theme-toggle {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: var(--fcapt-primary);
+    color: white;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    z-index: 9999;
+    font-size: 1.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
