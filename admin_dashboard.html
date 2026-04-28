@@ -3,41 +3,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard | FCAPT</title>
+    <title>Admin Console | FCAPT</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --fcapt-primary: #1e4620; --fcapt-bg: #f1f5f9; }
+        :root { --fcapt-primary: #1e4620; --fcapt-bg: #f1f5f9; --white: #ffffff; }
         body { font-family: 'Inter', sans-serif; background: var(--fcapt-bg); margin: 0; color: #1e293b; }
-        .header { background: #1a1a1a; color: white; padding: 1.2rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--fcapt-primary); }
-        .container { max-width: 500px; margin: 4rem auto; padding: 0 20px; }
-        .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        h3 { color: var(--fcapt-primary); margin-top: 0; border-bottom: 1px solid #edf2f7; padding-bottom: 10px; }
-        .input-group { margin-bottom: 1.5rem; }
-        label { display: block; margin-bottom: 8px; font-weight: 600; color: #475569; font-size: 0.9rem; }
-        input { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
-        .btn-save { width: 100%; background: var(--fcapt-primary); color: white; padding: 14px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
-        .btn-save:hover { background: #143216; }
+        
+        .header { background: #1a1a1a; color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--fcapt-primary); }
+        
+        .nav-tabs { background: white; display: flex; border-bottom: 1px solid #e2e8f0; padding: 0 2rem; }
+        .tab { padding: 1rem 1.5rem; cursor: pointer; font-weight: 600; color: #64748b; border-bottom: 3px solid transparent; }
+        .tab.active { color: var(--fcapt-primary); border-bottom-color: var(--fcapt-primary); }
+
+        .container { max-width: 900px; margin: 2rem auto; padding: 0 20px; }
+        .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 2rem; }
+        
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .form-group { margin-bottom: 1.2rem; }
+        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 0.85rem; color: #475569; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; font-family: inherit; }
+        
+        .btn-action { background: var(--fcapt-primary); color: white; padding: 12px 20px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .btn-action:hover { opacity: 0.9; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
+        th { color: #64748b; font-weight: 600; background: #f8fafc; }
+
+        .hidden { display: none; }
     </style>
 </head>
 <body>
+
     <header class="header">
-        <h2 style="margin:0; font-size: 1.2rem;">FCAPT Admin Console</h2>
-        <button onclick="logout()" style="background:transparent; border:1px solid rgba(255,255,255,0.4); color:white; padding:6px 12px; cursor:pointer; border-radius:4px;">Logout</button>
+        <h2 style="margin:0">FCAPT Administrator</h2>
+        <button onclick="logout()" style="background:transparent; border:1px solid white; color:white; padding:6px 12px; cursor:pointer; border-radius:4px;">Logout</button>
     </header>
 
+    <div class="nav-tabs">
+        <div class="tab active" onclick="showTab('system')">Semester</div>
+        <div class="tab" onclick="showTab('users')">Manage Users</div>
+        <div class="tab" onclick="showTab('courses')">Course Management</div>
+    </div>
+
     <main class="container">
-        <div class="card">
-            <h3>Semester Configuration</h3>
-            <div class="input-group">
-                <label>Resumption Date</label>
-                <input type="date" id="res_date">
+        
+        <section id="tab-system" class="card">
+            <h3>Semester Parameters</h3>
+            <div class="grid">
+                <div class="form-group">
+                    <label>Resumption Date</label>
+                    <input type="date" id="res_date">
+                </div>
+                <div class="form-group">
+                    <label>Semester End Date</label>
+                    <input type="date" id="end_date">
+                </div>
             </div>
-            <div class="input-group">
-                <label>End of Semester</label>
-                <input type="date" id="end_date">
+            <button class="btn-action" onclick="saveSettings()">Update Dates</button>
+        </section>
+
+        <section id="tab-users" class="card hidden">
+            <h3>Add New Student / Lecturer</h3>
+            <div class="grid">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="user_name" placeholder="John Doe">
+                </div>
+                <div class="form-group">
+                    <label>ID / Reg Number</label>
+                    <input type="text" id="user_id" placeholder="FCAPT/CPS/26/001">
+                </div>
+                <div class="form-group">
+                    <label>Role</label>
+                    <select id="user_role" onchange="toggleStudentFields()">
+                        <option value="student">Student</option>
+                        <option value="lecturer">Lecturer</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Initial Password</label>
+                    <input type="text" id="user_pass" value="Fcapt123">
+                </div>
             </div>
-            <button class="btn-save" onclick="saveSettings()">Update System Parameters</button>
-        </div>
+
+            <div id="student_fields" class="grid" style="margin-top: 10px;">
+                <div class="form-group">
+                    <label>Program</label>
+                    <select id="user_prog">
+                        <option value="AEM">AEM</option><option value="AHP">AHP</option>
+                        <option value="CEM">CEM</option><option value="CPS">CPS</option>
+                        <option value="NCC">NCC</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Class</label>
+                    <select id="user_class">
+                        <option value="ND I">ND I</option><option value="ND II">ND II</option>
+                        <option value="Pre-HND">Pre-HND</option><option value="HND I">HND I</option>
+                        <option value="HND II">HND II</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="btn-action" onclick="addUser()">Create Profile</button>
+        </section>
+
+        <section id="tab-courses" class="card hidden">
+            <h3>Add Course & Assign Lecturer</h3>
+            <div class="grid">
+                <div class="form-group">
+                    <label>Course Code</label>
+                    <input type="text" id="c_code" placeholder="CPS 111">
+                </div>
+                <div class="form-group">
+                    <label>Course Title</label>
+                    <input type="text" id="c_title" placeholder="Intro to Programming">
+                </div>
+                <div class="form-group">
+                    <label>Assigned Lecturer</label>
+                    <select id="c_lecturer">
+                        <option value="">-- Select Lecturer --</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn-action" onclick="addCourse()">Create & Assign Course</button>
+
+            <h3 style="margin-top: 2rem;">Current Courses</h3>
+            <table id="course-table">
+                <thead><tr><th>Code</th><th>Title</th><th>Lecturer</th></tr></thead>
+                <tbody id="course-list"></tbody>
+            </table>
+        </section>
+
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -46,22 +144,78 @@
         const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvYmxpY3ZlcnFjaWprcWF0dmhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMTAyOTYsImV4cCI6MjA5MTY4NjI5Nn0.vV-rpPzniYgSTzBStfikL_SJc722-41ezkiJnI4nOPs';
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
-        const user = JSON.parse(localStorage.getItem('fcapt_user'));
-        if (!user || user.role !== 'admin') window.location.href = 'index.html';
+        // UI Routing
+        function showTab(tabId) {
+            document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+            event.target.classList.add('active');
+            if(tabId === 'courses' || tabId === 'users') loadDynamicData();
+        }
 
-        async function loadSettings() {
-            const { data } = await supabaseClient.from('settings').select('*').eq('id', 1).single();
-            if (data) {
-                document.getElementById('res_date').value = data.resumption_date;
-                document.getElementById('end_date').value = data.semester_end_date;
-            }
+        function toggleStudentFields() {
+            const role = document.getElementById('user_role').value;
+            document.getElementById('student_fields').style.display = (role === 'student') ? 'grid' : 'none';
+        }
+
+        // --- Data Operations ---
+
+        async function loadDynamicData() {
+            // Load Lecturers for the dropdown
+            const { data: lecs } = await supabaseClient.from('profiles').select('id, full_name').eq('role', 'lecturer');
+            const lecSelect = document.getElementById('c_lecturer');
+            lecSelect.innerHTML = '<option value="">-- Select Lecturer --</option>';
+            lecs.forEach(l => lecSelect.innerHTML += `<option value="${l.id}">${l.full_name}</option>`);
+
+            // Load Course Table
+            const { data: courses } = await supabaseClient.from('courses').select('*, profiles(full_name)');
+            const list = document.getElementById('course-list');
+            list.innerHTML = '';
+            courses.forEach(c => {
+                list.innerHTML += `<tr><td>${c.course_code}</td><td>${c.course_title}</td><td>${c.profiles ? c.profiles.full_name : 'Unassigned'}</td></tr>`;
+            });
         }
 
         async function saveSettings() {
-            const res = document.getElementById('res_date').value;
-            const end = document.getElementById('end_date').value;
-            const { error } = await supabaseClient.from('settings').update({ resumption_date: res, semester_end_date: end }).eq('id', 1);
-            if (!error) alert("System dates synchronized successfully.");
+            const { error } = await supabaseClient.from('settings').update({
+                resumption_date: document.getElementById('res_date').value,
+                semester_end_date: document.getElementById('end_date').value
+            }).eq('id', 1);
+            if(!error) alert("Dates updated successfully");
+        }
+
+        async function addUser() {
+            const role = document.getElementById('user_role').value;
+            const payload = {
+                full_name: document.getElementById('user_name').value,
+                reg_num: document.getElementById('user_id').value,
+                password: document.getElementById('user_pass').value,
+                role: role
+            };
+            if(role === 'student') {
+                payload.program = document.getElementById('user_prog').value;
+                payload.student_class = document.getElementById('user_class').value;
+            }
+            const { error } = await supabaseClient.from('profiles').insert([payload]);
+            if(!error) { alert("User Created!"); document.getElementById('user_name').value = ''; }
+            else alert(error.message);
+        }
+
+        async function addCourse() {
+            const { error } = await supabaseClient.from('courses').insert([{
+                course_code: document.getElementById('c_code').value,
+                course_title: document.getElementById('c_title').value,
+                lecturer_id: document.getElementById('c_lecturer').value
+            }]);
+            if(!error) { alert("Course Added!"); loadDynamicData(); }
+        }
+
+        async function loadSettings() {
+            const { data } = await supabaseClient.from('settings').select('*').single();
+            if(data) {
+                document.getElementById('res_date').value = data.resumption_date;
+                document.getElementById('end_date').value = data.semester_end_date;
+            }
         }
 
         function logout() { localStorage.clear(); window.location.href = 'index.html'; }
