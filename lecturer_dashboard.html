@@ -3,12 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lecturer Portal</title>
-    <link rel="stylesheet" href="style.css"> <style>
+    <title>FCAPT | Lecturer Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
         :root { --fcapt-primary: #1e4620; --fcapt-bg: #f8fafc; --card-bg: #ffffff; --text-main: #1e293b; --border-color: #e2e8f0; }
         [data-theme="dark"] { --fcapt-bg: #0f172a; --card-bg: #1e293b; --text-main: #f1f5f9; --border-color: #334155; }
         body { font-family: 'Inter', sans-serif; background: var(--fcapt-bg); color: var(--text-main); margin: 0; }
         .header { background: var(--fcapt-primary); color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+        .logo-box { display: flex; align-items: center; gap: 12px; }
+        .logo-img { height: 40px; filter: brightness(0) invert(1); }
         .container { max-width: 1000px; margin: 2rem auto; padding: 0 20px; }
         .filter-bar { background: var(--card-bg); padding: 20px; border-radius: 12px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; border: 1px solid var(--border-color); }
         .card { background: var(--card-bg); padding: 25px; border-radius: 12px; border: 1px solid var(--border-color); overflow-x: auto; }
@@ -20,12 +23,10 @@
 </head>
 <body>
     <header class="header">
-    <div style="display: flex; align-items: center; gap: 15px;">
-        <img src="logo.png" alt="Logo" style="height: 40px; filter: brightness(0) invert(1);">
-        <h2 id="lec-name" style="margin:0">FCAPT | LECTURER DASHBOARD</h2>
-    </div>
-    <button onclick="logout()" style="background:rgba(255,255,255,0.2); color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">Logout</button>
-        <h2 id="lec-name">Lecturer Dashboard</h2>
+        <div class="logo-box">
+            <img src="logo.png" alt="Logo" class="logo-img">
+            <h2 id="lec-header">FCAPT | LECTURER DASHBOARD</h2>
+        </div>
         <button onclick="logout()" style="background:rgba(255,255,255,0.2); color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">Logout</button>
     </header>
 
@@ -43,7 +44,6 @@
             </table>
         </div>
     </main>
-
     <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -63,7 +63,6 @@
         document.documentElement.setAttribute('data-theme', localStorage.getItem('fcapt_theme') || 'light');
 
         async function init() {
-            document.getElementById('lec-name').innerText = "Lec. " + user.full_name;
             const { data: myC } = await supabaseClient.from('courses').select('*').eq('lecturer_id', user.id);
             const { data: st } = await supabaseClient.from('profiles').select('*').eq('role', 'student');
             const { data: at } = await supabaseClient.from('attendance').select('*');
