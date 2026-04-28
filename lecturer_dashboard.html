@@ -6,38 +6,45 @@
     <title>Lecturer Dashboard | FCAPT</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --fcapt-green: #2d5a27; --accent-gold: #c5a059; --white: #ffffff; }
+        :root { --fcapt-green: #2d5a27; --accent-gold: #c5a059; }
         body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; margin: 0; }
         .header { background: var(--fcapt-green); color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--accent-gold); }
-        .container { max-width: 800px; margin: 2rem auto; padding: 0 20px; }
-        .stat-card { background: white; padding: 1.5rem; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); text-align: center; margin-bottom: 20px; }
-        .log-container { background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); overflow: hidden; }
-        .log-header { background: #f8f9fa; padding: 15px 20px; border-bottom: 1px solid #eee; font-weight: 700; color: var(--fcapt-green); }
-        #attendance-log { list-style: none; padding: 0; margin: 0; }
-        .log-item { padding: 15px 20px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; animation: slideIn 0.3s ease; }
-        @keyframes slideIn { from { opacity:0; transform: translateX(-10px); } to { opacity:1; transform: translateX(0); } }
-        .course-tag { background: #e8f5e9; color: #2e7d32; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; }
+        .container { max-width: 900px; margin: 2rem auto; padding: 0 20px; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #eee; }
+        th { background: #f8f9fa; color: var(--fcapt-green); }
+        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
+        .danger { background: #ffebee; color: #d32f2f; }
+        .success { background: #e8f5e9; color: #2e7d32; }
     </style>
 </head>
 <body>
 
     <header class="header">
         <div>
-            <h2 style="margin:0" id="lec-name">Dr. Lecturer</h2>
-            <small>Institutional Attendance Monitor</small>
+            <h2 style="margin:0" id="lec-name">Lecturer</h2>
+            <small id="week-info">Week Loading...</small>
         </div>
-        <button style="background:none; border:1px solid white; color:white; padding:5px 15px; cursor:pointer; border-radius:4px;" onclick="logout()">Logout</button>
+        <button onclick="logout()" style="background:none; border:1px solid white; color:white; padding:5px 10px; cursor:pointer;">Logout</button>
     </header>
 
     <main class="container">
-        <div class="stat-card">
-            <h3>Active Students</h3>
-            <p id="total-count" style="font-size: 3rem; color: var(--fcapt-green); margin: 0; font-weight: 800;">0</p>
-        </div>
-
-        <div class="log-container">
-            <div class="log-header">Live Feed (Your Assigned Courses)</div>
-            <ul id="attendance-log"></ul>
+        <div class="card">
+            <h3>Student Attendance Report</h3>
+            <table id="attendance-table">
+                <thead>
+                    <tr>
+                        <th>Student Name</th>
+                        <th>Reg Number</th>
+                        <th>Course</th>
+                        <th>Attendance (%)</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                    </tbody>
+            </table>
         </div>
     </main>
 
@@ -48,50 +55,61 @@
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
         const user = JSON.parse(localStorage.getItem('fcapt_user'));
-        if (!user || user.role !== 'lecturer') window.location.href = 'index.html';
-        document.getElementById('lec-name').innerText = user.full_name;
+        let totalSemesterWeeks = 12;
 
-        let myCourseIds = [];
-        let count = 0;
+        async function init() {
+            if (!user || user.role !== 'lecturer') window.location.href = 'index.html';
+            document.getElementById('lec-name').innerText = user.full_name;
 
-        async function initDashboard() {
-            // 1. Get courses belonging to this lecturer
-            const { data: courses } = await supabaseClient.from('courses').select('id').eq('lecturer_id', user.id);
-            myCourseIds = courses.map(c => c.id);
+            const { data: settings } = await supabaseClient.from('settings').select('*').single();
+            const start = new Date(settings.resumption_date);
+            const end = new Date(settings.semester_end_date);
+            totalSemesterWeeks = Math.ceil((end - start) / (7 * 24 * 60 * 60 * 1000));
+            
+            const currentWeek = Math.ceil((new Date() - start) / (7 * 24 * 60 * 60 * 1000));
+            document.getElementById('week-info').innerText = `Semester Week: ${currentWeek}`;
 
-            // 2. Start Real-time Subscription
-            supabaseClient
-                .channel('realtime-attendance')
-                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'attendance' }, async (payload) => {
-                    // Check if the student checked into one of THIS lecturer's courses
-                    if (myCourseIds.includes(payload.new.course_id)) {
-                        const { data: student } = await supabaseClient.from('profiles').select('full_name, reg_num').eq('id', payload.new.student_id).single();
-                        const { data: course } = await supabaseClient.from('courses').select('course_code').eq('id', payload.new.course_id).single();
-                        
-                        addLogEntry(student.full_name, student.reg_num, course.course_code, payload.new.check_in_time);
-                    }
-                })
-                .subscribe();
+            loadReport();
         }
 
-        function addLogEntry(name, reg, code, time) {
-            const list = document.getElementById('attendance-log');
-            const li = document.createElement('li');
-            li.className = 'log-item';
-            li.innerHTML = `
-                <div>
-                    <strong>${name}</strong> <span class="course-tag">${code}</span><br>
-                    <small style="color:#666">${reg}</small>
-                </div>
-                <span style="color:#888; font-size: 0.9rem;">${new Date(time).toLocaleTimeString()}</span>
-            `;
-            list.prepend(li);
-            count++;
-            document.getElementById('total-count').innerText = count;
+        async function loadReport() {
+            // 1. Get Lecturer's Courses
+            const { data: myCourses } = await supabaseClient.from('courses').select('id, course_code').eq('lecturer_id', user.id);
+            const courseIds = myCourses.map(c => c.id);
+
+            // 2. Get All Attendance for these courses
+            const { data: attendance } = await supabaseClient.from('attendance').select('student_id, course_id').in('course_id', courseIds);
+
+            // 3. Get All Students
+            const { data: students } = await supabaseClient.from('profiles').select('id, full_name, reg_num').eq('role', 'student');
+
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '';
+
+            students.forEach(student => {
+                myCourses.forEach(course => {
+                    const studentCourseAtt = attendance.filter(a => a.student_id === student.id && a.course_id === course.id).length;
+                    const percent = Math.round((studentCourseAtt / totalSemesterWeeks) * 100);
+                    
+                    if (studentCourseAtt > 0) { // Only show students who have checked in at least once
+                        const statusClass = percent < 75 ? 'danger' : 'success';
+                        const statusText = percent < 75 ? 'Shortfall' : 'Eligible';
+
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${student.full_name}</td>
+                                <td>${student.reg_num}</td>
+                                <td>${course.course_code}</td>
+                                <td>${percent}%</td>
+                                <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                            </tr>`;
+                    }
+                });
+            });
         }
 
         function logout() { localStorage.clear(); window.location.href = 'index.html'; }
-        initDashboard();
+        init();
     </script>
 </body>
 </html>
