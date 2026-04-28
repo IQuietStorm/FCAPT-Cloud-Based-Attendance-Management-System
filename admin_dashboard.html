@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
+    <title>FCAPT | Admin Console</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root { --fcapt-primary: #1e4620; --fcapt-bg: #f1f5f9; --card-bg: #ffffff; --text-main: #1e293b; --border-color: #e2e8f0; }
         [data-theme="dark"] { --fcapt-bg: #0f172a; --card-bg: #1e293b; --text-main: #f1f5f9; --border-color: #334155; }
         body { font-family: 'Inter', sans-serif; background: var(--fcapt-bg); color: var(--text-main); margin: 0; transition: 0.3s; }
-        .header { background: #1a1a1a; color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+        .header { background: #1a1a1a; color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--fcapt-primary); }
+        .logo-box { display: flex; align-items: center; gap: 12px; }
+        .logo-img { height: 40px; filter: brightness(0) invert(1); }
         .nav-tabs { background: var(--card-bg); display: flex; border-bottom: 1px solid var(--border-color); overflow-x: auto; }
         .tab { padding: 1rem 1.5rem; cursor: pointer; font-weight: 600; color: #64748b; white-space: nowrap; }
         .tab.active { color: var(--fcapt-primary); border-bottom: 3px solid var(--fcapt-primary); }
@@ -25,14 +27,11 @@
     </style>
 </head>
 <body>
-
     <header class="header">
-    <div style="display: flex; align-items: center; gap: 15px;">
-        <img src="logo.png" alt="Logo" style="height: 40px; filter: brightness(0) invert(1);">
-        <h2 style="margin:0">FCAPT | ADMIN CONSOLE</h2>
-    </div>
-    <button class="btn" onclick="logout()" style="background:transparent; border:1px solid white;">Logout</button>
-        <h2 style="margin:0">Admin Console</h2>
+        <div class="logo-box">
+            <img src="logo.png" alt="Logo" class="logo-img">
+            <h2 style="margin:0">FCAPT | ADMIN CONSOLE</h2>
+        </div>
         <button class="btn" onclick="logout()" style="background:transparent; border:1px solid white;">Logout</button>
     </header>
 
@@ -53,7 +52,7 @@
         </section>
 
         <section id="tab-courses" class="card hidden">
-            <h3>Course Registry & Reassignment</h3>
+            <h3>Course Management</h3>
             <input type="hidden" id="edit_cid">
             <div class="grid">
                 <div><label>Code</label><input type="text" id="c_code"></div>
@@ -66,7 +65,6 @@
             </div>
         </section>
     </main>
-
     <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
