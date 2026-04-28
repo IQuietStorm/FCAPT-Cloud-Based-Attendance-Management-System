@@ -9,12 +9,12 @@
         :root { --fcapt-green: #2d5a27; --accent-gold: #c5a059; }
         body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; margin: 0; }
         .header { background: var(--fcapt-green); color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--accent-gold); }
-        .container { max-width: 900px; margin: 2rem auto; padding: 0 20px; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #eee; }
-        th { background: #f8f9fa; color: var(--fcapt-green); }
-        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
+        .container { max-width: 950px; margin: 2rem auto; padding: 0 20px; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { text-align: left; padding: 15px; border-bottom: 1px solid #eee; }
+        th { background: #f8f9fa; color: var(--fcapt-green); font-weight: 700; }
+        .badge { padding: 5px 10px; border-radius: 4px; font-size: 0.8rem; font-weight: 700; }
         .danger { background: #ffebee; color: #d32f2f; }
         .success { background: #e8f5e9; color: #2e7d32; }
     </style>
@@ -23,27 +23,29 @@
 
     <header class="header">
         <div>
-            <h2 style="margin:0" id="lec-name">Lecturer</h2>
-            <small id="week-info">Week Loading...</small>
+            <h2 style="margin:0" id="lec-name">Lecturer Portal</h2>
+            <small id="week-info">Calculating Week...</small>
         </div>
-        <button onclick="logout()" style="background:none; border:1px solid white; color:white; padding:5px 10px; cursor:pointer;">Logout</button>
+        <button onclick="logout()" style="background:none; border:1px solid white; color:white; padding:5px 15px; cursor:pointer; border-radius:4px;">Logout</button>
     </header>
 
     <main class="container">
         <div class="card">
-            <h3>Student Attendance Report</h3>
+            <h3 style="margin-top:0">My Students Attendance Report</h3>
+            <p style="font-size:0.9rem; color:#666;">Showing status based on 75% semester requirement.</p>
             <table id="attendance-table">
                 <thead>
                     <tr>
                         <th>Student Name</th>
                         <th>Reg Number</th>
                         <th>Course</th>
-                        <th>Attendance (%)</th>
+                        <th>Attendance</th>
                         <th>Status</th>
                     </tr>
                 </thead>
                 <tbody id="table-body">
-                    </tbody>
+                    <tr><td colspan="5">Loading report...</td></tr>
+                </tbody>
             </table>
         </div>
     </main>
@@ -58,16 +60,19 @@
         let totalSemesterWeeks = 12;
 
         async function init() {
-            if (!user || user.role !== 'lecturer') window.location.href = 'index.html';
+            if (!user || user.role !== 'lecturer') { window.location.href = 'index.html'; return; }
             document.getElementById('lec-name').innerText = user.full_name;
 
+            // 1. Get Dates
             const { data: settings } = await supabaseClient.from('settings').select('*').single();
-            const start = new Date(settings.resumption_date);
-            const end = new Date(settings.semester_end_date);
-            totalSemesterWeeks = Math.ceil((end - start) / (7 * 24 * 60 * 60 * 1000));
-            
-            const currentWeek = Math.ceil((new Date() - start) / (7 * 24 * 60 * 60 * 1000));
-            document.getElementById('week-info').innerText = `Semester Week: ${currentWeek}`;
+            if (settings) {
+                const start = new Date(settings.resumption_date);
+                const end = new Date(settings.semester_end_date);
+                totalSemesterWeeks = Math.ceil((end - start) / (7 * 24 * 60 * 60 * 1000));
+                
+                const currentWeek = Math.ceil((new Date() - start) / (7 * 24 * 60 * 60 * 1000));
+                document.getElementById('week-info').innerText = `Current Semester Week: ${currentWeek > 0 ? currentWeek : 1}`;
+            }
 
             loadReport();
         }
@@ -75,6 +80,11 @@
         async function loadReport() {
             // 1. Get Lecturer's Courses
             const { data: myCourses } = await supabaseClient.from('courses').select('id, course_code').eq('lecturer_id', user.id);
+            if (!myCourses || myCourses.length === 0) {
+                document.getElementById('table-body').innerHTML = '<tr><td colspan="5">No courses assigned to you.</td></tr>';
+                return;
+            }
+            
             const courseIds = myCourses.map(c => c.id);
 
             // 2. Get All Attendance for these courses
@@ -88,24 +98,29 @@
 
             students.forEach(student => {
                 myCourses.forEach(course => {
-                    const studentCourseAtt = attendance.filter(a => a.student_id === student.id && a.course_id === course.id).length;
-                    const percent = Math.round((studentCourseAtt / totalSemesterWeeks) * 100);
+                    const studentAtt = attendance ? attendance.filter(a => a.student_id === student.id && a.course_id === course.id).length : 0;
                     
-                    if (studentCourseAtt > 0) { // Only show students who have checked in at least once
+                    // Logic: Only show students who have checked in at least once
+                    if (studentAtt > 0) {
+                        const percent = Math.round((studentAtt / totalSemesterWeeks) * 100);
                         const statusClass = percent < 75 ? 'danger' : 'success';
                         const statusText = percent < 75 ? 'Shortfall' : 'Eligible';
 
                         tbody.innerHTML += `
                             <tr>
-                                <td>${student.full_name}</td>
+                                <td><strong>${student.full_name}</strong></td>
                                 <td>${student.reg_num}</td>
-                                <td>${course.course_code}</td>
+                                <td><span style="color:var(--fcapt-green); font-weight:600;">${course.course_code}</span></td>
                                 <td>${percent}%</td>
-                                <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                                <td><span class="badge ${statusClass}">${statusText}</span></td>
                             </tr>`;
                     }
                 });
             });
+
+            if (tbody.innerHTML === '') {
+                tbody.innerHTML = '<tr><td colspan="5">No attendance data yet.</td></tr>';
+            }
         }
 
         function logout() { localStorage.clear(); window.location.href = 'index.html'; }
