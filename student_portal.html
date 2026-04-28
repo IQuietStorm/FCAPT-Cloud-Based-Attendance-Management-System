@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Portal | FCAPT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --fcapt-green: #2d5a27;
+            --accent-gold: #c5a059;
+            --white: #ffffff;
+            --danger: #d32f2f;
+        }
+
+        body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; margin: 0; }
+
+        .header {
+            background: var(--fcapt-green);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 4px solid var(--accent-gold);
+        }
+
+        .container { max-width: 800px; margin: 2rem auto; padding: 0 20px; }
+
+        /* Attendance Progress Section */
+        .card {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .progress-container {
+            background: #eee;
+            border-radius: 20px;
+            height: 25px;
+            width: 100%;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+
+        #progress-bar {
+            background: var(--fcapt-green);
+            height: 100%;
+            width: 0%;
+            transition: width 1s ease-in-out;
+        }
+
+        /* 9th Week Warning Style */
+        #warning-box {
+            display: none;
+            background: #ffebee;
+            border-left: 5px solid var(--danger);
+            color: var(--danger);
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .btn-checkin {
+            width: 100%;
+            padding: 15px;
+            background: var(--fcapt-green);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-checkin:disabled { background: #ccc; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div>
+            <h2 style="margin:0" id="student-name">Student Name</h2>
+            <small id="student-reg">FCAPT/HND/...</small>
+        </div>
+        <button style="background:none; border:1px solid white; color:white; cursor:pointer; padding:5px 10px;" onclick="logout()">Logout</button>
+    </header>
+
+    <main class="container">
+        <div id="warning-box">
+            ⚠️ WEEK 9 WARNING: Your attendance is below 75%. You are currently ineligible for examinations.
+        </div>
+
+        <div class="card">
+            <h3>Attendance Overview</h3>
+            <p>Overall Percentage: <span id="percent-text">0%</span></p>
+            <div class="progress-container">
+                <div id="progress-bar"></div>
+            </div>
+            <p style="font-size: 0.85rem; color: #666;">Requirement: 75% for exam eligibility.</p>
+        </div>
+
+        <div class="card" style="text-align: center;">
+            <h3>Mark Attendance</h3>
+            <p>Current Week: <strong>Week 9</strong></p>
+            <button id="checkin-btn" class="btn-checkin" onclick="markAttendance()">Click to Check-In</button>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SB_URL = 'https://plztbuirvlxlbmbuscwf.supabase.co';
+        const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsenRidWlydmx4bGJtYnVzY3dmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0MjQ5OTMsImV4cCI6MjA5MjAwMDk5M30.ZJY5wVNo3SbPEgS5u5bsSZg1g8D96ak9AT0VTCm6gi8';
+        const supabase = window.supabase.createClient(SB_URL, SB_KEY);
+
+        const user = JSON.parse(localStorage.getItem('fcapt_user'));
+        if (!user) window.location.href = 'index.html';
+
+        document.getElementById('student-name').innerText = user.full_name;
+        document.getElementById('student-reg').innerText = user.reg_num;
+
+        // 1. Initial Load: Check current attendance stats
+        async function loadStats() {
+            const { data, count } = await supabase
+                .from('attendance')
+                .select('*', { count: 'exact' })
+                .eq('student_id', user.id);
+
+            // Logic: Assume 12 weeks total. 1 check-in per week.
+            const totalWeeks = 12;
+            const attendedCount = count || 0;
+            const percentage = Math.round((attendedCount / totalWeeks) * 100);
+
+            document.getElementById('percent-text').innerText = percentage + "%";
+            document.getElementById('progress-bar').style.width = percentage + "%";
+
+            // 2. The 9th Week Warning Logic
+            const currentWeek = 9; 
+            if (currentWeek >= 9 && percentage < 75) {
+                document.getElementById('warning-box').style.display = 'block';
+            }
+        }
+
+        // 3. Mark Attendance Function
+        async function markAttendance() {
+            const btn = document.getElementById('checkin-btn');
+            btn.disabled = true;
+            btn.innerText = "Processing...";
+
+            const { error } = await supabase
+                .from('attendance')
+                .insert([
+                    { 
+                        student_id: user.id, 
+                        course_id: '861a559e-1085-455b-8006-03c6214156c4', // Replace with a valid course ID from your DB
+                        week_number: 9 
+                    }
+                ]);
+
+            if (error) {
+                alert("Error: " + error.message);
+                btn.disabled = false;
+                btn.innerText = "Click to Check-In";
+            } else {
+                alert("Check-in successful!");
+                btn.innerText = "Checked-In for Week 9";
+                loadStats(); // Refresh the bar
+            }
+        }
+
+        function logout() { localStorage.clear(); window.location.href = 'index.html'; }
+        
+        loadStats();
+    </script>
+</body>
+</html>
