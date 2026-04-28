@@ -10,13 +10,14 @@
         body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; margin: 0; }
         .main-header { background-color: var(--fcapt-green); color: var(--white); padding: 1rem 2rem; border-bottom: 4px solid var(--accent-gold); }
         .container { display: flex; flex-direction: column; align-items: center; padding: 40px 20px; min-height: 80vh; }
-        .card { background: var(--white); padding: 2rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 400px; margin-bottom: 20px; }
+        .card { background: var(--white); padding: 2.5rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 400px; border-top: 5px solid var(--fcapt-green); margin-bottom: 20px; }
         .input-group { margin-top: 1.2rem; }
         label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem; }
-        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
-        .btn-primary { width: 100%; background-color: var(--fcapt-green); color: white; padding: 14px; border: none; border-radius: 6px; margin-top: 1.5rem; font-weight: 600; cursor: pointer; }
+        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
+        .btn-primary { width: 100%; background-color: var(--fcapt-green); color: white; padding: 14px; border: none; border-radius: 6px; margin-top: 1.5rem; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
+        .btn-primary:hover { opacity: 0.9; }
         #admin-panel { display: none; border: 2px dashed var(--accent-gold); }
-        #toast { position: fixed; top: 20px; right: 20px; background: #333; color: white; padding: 15px 25px; border-radius: 8px; display: none; z-index: 1000; }
+        #toast { position: fixed; top: 20px; right: 20px; background: #333; color: white; padding: 15px 25px; border-radius: 8px; display: none; z-index: 1000; border-left: 5px solid var(--accent-gold); }
     </style>
 </head>
 <body>
@@ -24,7 +25,7 @@
     <div id="toast"></div>
 
     <header class="main-header">
-        <h1 style="font-size: 1.3rem; margin: 0;">FCAPT Attendance System</h1>
+        <h1 style="font-size: 1.3rem; margin: 0;">FCAPT Cloud Attendance</h1>
     </header>
 
     <main class="container">
@@ -32,8 +33,8 @@
             <h2 style="color: var(--fcapt-green); margin: 0 0 10px 0;">Portal Login</h2>
             <form id="loginForm">
                 <div class="input-group">
-                    <label>ID Number</label>
-                    <input type="text" id="reg_num" required>
+                    <label>Registration Number / Staff ID</label>
+                    <input type="text" id="reg_num" placeholder="e.g. FCAPT/HND/NCC/25/1140" required>
                 </div>
                 <div class="input-group">
                     <label>Password</label>
@@ -44,8 +45,9 @@
         </div>
 
         <div class="card" id="admin-panel">
-            <h2 style="color: #b08a43; margin-top: 0;">Central Admin Panel</h2>
-            <p style="font-size: 0.8rem;">Set semester duration for percentage calculations.</p>
+            <h2 style="color: #b08a43; margin: 0 0 10px 0;">Central Admin</h2>
+            <p style="font-size: 0.85rem; color: #666; margin-bottom: 20px;">Configure semester dates for automatic calculations.</p>
+            
             <div class="input-group">
                 <label>Resumption Date</label>
                 <input type="date" id="resumption_date">
@@ -54,8 +56,9 @@
                 <label>End of Semester</label>
                 <input type="date" id="end_date">
             </div>
-            <button onclick="updateDates()" id="saveBtn" class="btn-primary" style="background:#b08a43;">Update Global Schedule</button>
-            <button onclick="location.reload()" style="background:none; border:none; color:#666; width:100%; margin-top:10px; cursor:pointer;">Exit Admin Mode</button>
+            
+            <button onclick="updateDates()" id="saveBtn" class="btn-primary" style="background:#b08a43;">Save Global Schedule</button>
+            <button onclick="location.reload()" style="background:none; border:none; color:#666; width:100%; margin-top:15px; cursor:pointer; font-size: 0.9rem;">← Back to Login</button>
         </div>
     </main>
 
@@ -66,27 +69,38 @@
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
         const loginForm = document.getElementById('loginForm');
-        
+
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            const btn = document.getElementById('loginBtn');
             const reg = document.getElementById('reg_num').value.trim();
             const pass = document.getElementById('password').value;
 
-            const { data, error } = await supabaseClient.from('profiles').select('*').eq('reg_num', reg).single();
+            btn.innerText = 'Verifying...';
+            btn.disabled = true;
 
-            if (!data || data.password !== pass) {
-                return showToast("Invalid credentials.");
-            }
+            try {
+                const { data, error } = await supabaseClient.from('profiles').select('*').eq('reg_num', reg).single();
 
-            // CHECK IF USER IS DR. EZEKIEL OLOWO
-            if (data.full_name.includes("Ezekiel Olowo")) {
-                showToast("Admin Access Granted.");
-                document.getElementById('login-card').style.display = 'none';
-                document.getElementById('admin-panel').style.display = 'block';
-                loadCurrentDates();
-            } else {
-                localStorage.setItem('fcapt_user', JSON.stringify(data));
-                window.location.href = data.role === 'lecturer' ? 'lecturer_dashboard.html' : 'student_portal.html';
+                if (error || !data || data.password !== pass) {
+                    showToast("Invalid credentials.");
+                } else {
+                    // ADMIN CHECK: If the user is Dr. Ezekiel Olowo
+                    if (data.full_name.includes("Ezekiel Olowo")) {
+                        showToast("Admin Access Granted");
+                        document.getElementById('login-card').style.display = 'none';
+                        document.getElementById('admin-panel').style.display = 'block';
+                        loadCurrentDates();
+                    } else {
+                        localStorage.setItem('fcapt_user', JSON.stringify(data));
+                        window.location.href = data.role === 'lecturer' ? 'lecturer_dashboard.html' : 'student_portal.html';
+                    }
+                }
+            } catch (err) {
+                showToast("Connection error.");
+            } finally {
+                btn.innerText = 'Sign In';
+                btn.disabled = false;
             }
         });
 
@@ -103,6 +117,8 @@
             const end = document.getElementById('end_date').value;
             const btn = document.getElementById('saveBtn');
 
+            if (!start || !end) return showToast("Please select both dates.");
+
             btn.innerText = "Saving...";
             const { error } = await supabaseClient.from('settings').update({ 
                 resumption_date: start, 
@@ -110,11 +126,11 @@
             }).eq('id', 1);
 
             if (!error) {
-                showToast("Dates updated successfully!");
+                showToast("Global schedule updated!");
             } else {
-                showToast("Update failed.");
+                showToast("Update failed: " + error.message);
             }
-            btn.innerText = "Update Global Schedule";
+            btn.innerText = "Save Global Schedule";
         }
 
         function showToast(msg) {
