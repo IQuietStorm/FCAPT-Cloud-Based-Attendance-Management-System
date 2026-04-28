@@ -10,13 +10,23 @@
         body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; margin: 0; }
         .main-header { background-color: var(--fcapt-green); color: var(--white); padding: 1rem 2rem; border-bottom: 4px solid var(--accent-gold); }
         .container { display: flex; flex-direction: column; align-items: center; padding: 40px 20px; min-height: 80vh; }
+        
         .card { background: var(--white); padding: 2.5rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 400px; border-top: 5px solid var(--fcapt-green); margin-bottom: 20px; }
+        
+        /* Specific Admin Styling to make it stand out */
+        #admin-panel { 
+            display: none; 
+            border-top: 5px solid var(--accent-gold); 
+            background: #fffdf9;
+        }
+
         .input-group { margin-top: 1.2rem; }
         label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem; }
         input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
-        .btn-primary { width: 100%; background-color: var(--fcapt-green); color: white; padding: 14px; border: none; border-radius: 6px; margin-top: 1.5rem; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
-        .btn-primary:hover { opacity: 0.9; }
-        #admin-panel { display: none; border: 2px dashed var(--accent-gold); }
+        
+        .btn-primary { width: 100%; background-color: var(--fcapt-green); color: white; padding: 14px; border: none; border-radius: 6px; margin-top: 1.5rem; font-weight: 600; cursor: pointer; }
+        .btn-admin { background-color: var(--accent-gold); }
+        
         #toast { position: fixed; top: 20px; right: 20px; background: #333; color: white; padding: 15px 25px; border-radius: 8px; display: none; z-index: 1000; border-left: 5px solid var(--accent-gold); }
     </style>
 </head>
@@ -34,7 +44,7 @@
             <form id="loginForm">
                 <div class="input-group">
                     <label>Registration Number / Staff ID</label>
-                    <input type="text" id="reg_num" placeholder="e.g. FCAPT/HND/NCC/25/1140" required>
+                    <input type="text" id="reg_num" placeholder="Enter ID" required>
                 </div>
                 <div class="input-group">
                     <label>Password</label>
@@ -45,8 +55,8 @@
         </div>
 
         <div class="card" id="admin-panel">
-            <h2 style="color: #b08a43; margin: 0 0 10px 0;">Central Admin</h2>
-            <p style="font-size: 0.85rem; color: #666; margin-bottom: 20px;">Configure semester dates for automatic calculations.</p>
+            <h2 style="color: var(--accent-gold); margin: 0 0 10px 0;">System Configuration</h2>
+            <p style="font-size: 0.85rem; color: #666; margin-bottom: 20px;">Welcome, Dr. Ezekiel Olowo. Please set the semester boundaries below.</p>
             
             <div class="input-group">
                 <label>Resumption Date</label>
@@ -57,8 +67,12 @@
                 <input type="date" id="end_date">
             </div>
             
-            <button onclick="updateDates()" id="saveBtn" class="btn-primary" style="background:#b08a43;">Save Global Schedule</button>
-            <button onclick="location.reload()" style="background:none; border:none; color:#666; width:100%; margin-top:15px; cursor:pointer; font-size: 0.9rem;">← Back to Login</button>
+            <button onclick="updateDates()" id="saveBtn" class="btn-primary btn-admin">Save Global Schedule</button>
+            
+            <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+            
+            <button onclick="goToLecturerDashboard()" style="width:100%; padding:10px; background:#eee; border:none; border-radius:6px; cursor:pointer;">Go to My Lecturer Dashboard</button>
+            <button onclick="location.reload()" style="background:none; border:none; color:#999; width:100%; margin-top:15px; cursor:pointer;">Logout</button>
         </div>
     </main>
 
@@ -68,39 +82,33 @@
         const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvYmxpY3ZlcnFjaWprcWF0dmhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMTAyOTYsImV4cCI6MjA5MTY4NjI5Nn0.vV-rpPzniYgSTzBStfikL_SJc722-41ezkiJnI4nOPs';
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
-        const loginForm = document.getElementById('loginForm');
-
-        loginForm.addEventListener('submit', async (e) => {
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const btn = document.getElementById('loginBtn');
             const reg = document.getElementById('reg_num').value.trim();
             const pass = document.getElementById('password').value;
+            const btn = document.getElementById('loginBtn');
 
             btn.innerText = 'Verifying...';
-            btn.disabled = true;
 
-            try {
-                const { data, error } = await supabaseClient.from('profiles').select('*').eq('reg_num', reg).single();
+            const { data, error } = await supabaseClient.from('profiles').select('*').eq('reg_num', reg).single();
 
-                if (error || !data || data.password !== pass) {
-                    showToast("Invalid credentials.");
-                } else {
-                    // ADMIN CHECK: If the user is Dr. Ezekiel Olowo
-                    if (data.full_name.includes("Ezekiel Olowo")) {
-                        showToast("Admin Access Granted");
-                        document.getElementById('login-card').style.display = 'none';
-                        document.getElementById('admin-panel').style.display = 'block';
-                        loadCurrentDates();
-                    } else {
-                        localStorage.setItem('fcapt_user', JSON.stringify(data));
-                        window.location.href = data.role === 'lecturer' ? 'lecturer_dashboard.html' : 'student_portal.html';
-                    }
-                }
-            } catch (err) {
-                showToast("Connection error.");
-            } finally {
+            if (error || !data || data.password !== pass) {
+                showToast("Login Failed.");
                 btn.innerText = 'Sign In';
-                btn.disabled = false;
+            } else {
+                localStorage.setItem('fcapt_user', JSON.stringify(data));
+                
+                // Flexible name check for Dr. Ezekiel Olowo
+                const isAdmin = data.full_name.toLowerCase().includes("ezekiel") || data.full_name.toLowerCase().includes("olowo");
+
+                if (isAdmin) {
+                    showToast("Admin Identity Verified");
+                    document.getElementById('login-card').style.display = 'none';
+                    document.getElementById('admin-panel').style.display = 'block';
+                    loadCurrentDates();
+                } else {
+                    window.location.href = data.role === 'lecturer' ? 'lecturer_dashboard.html' : 'student_portal.html';
+                }
             }
         });
 
@@ -117,20 +125,24 @@
             const end = document.getElementById('end_date').value;
             const btn = document.getElementById('saveBtn');
 
-            if (!start || !end) return showToast("Please select both dates.");
+            if (!start || !end) return showToast("Set both dates!");
 
-            btn.innerText = "Saving...";
+            btn.innerText = "Updating Database...";
             const { error } = await supabaseClient.from('settings').update({ 
                 resumption_date: start, 
                 semester_end_date: end 
             }).eq('id', 1);
 
             if (!error) {
-                showToast("Global schedule updated!");
+                showToast("Dates saved successfully!");
+                btn.innerText = "Save Global Schedule";
             } else {
-                showToast("Update failed: " + error.message);
+                showToast("Error saving dates.");
             }
-            btn.innerText = "Save Global Schedule";
+        }
+
+        function goToLecturerDashboard() {
+            window.location.href = 'lecturer_dashboard.html';
         }
 
         function showToast(msg) {
