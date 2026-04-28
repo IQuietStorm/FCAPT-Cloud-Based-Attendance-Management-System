@@ -6,92 +6,36 @@
     <title>Lecturer Dashboard | FCAPT</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { 
-            --fcapt-primary: #1e4620; 
-            --fcapt-bg: #f8fafc; 
-            --danger: #be123c; 
-            --success: #15803d;
-        }
-        body { font-family: 'Inter', sans-serif; background: var(--fcapt-bg); margin: 0; color: #1e293b; }
-        
-        .header { 
-            background: var(--fcapt-primary); 
-            color: white; 
-            padding: 1.2rem 2rem; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
-        }
-
-        .header-info h2 { margin: 0; font-size: 1.2rem; letter-spacing: -0.5px; }
-        .header-info small { opacity: 0.8; font-size: 0.85rem; }
-
-        .btn-logout {
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.3);
-            color: white;
-            padding: 8px 16px;
-            cursor: pointer;
-            border-radius: 6px;
-            font-weight: 600;
-            transition: background 0.2s;
-        }
-        .btn-logout:hover { background: rgba(255,255,255,0.2); }
-
+        :root { --fcapt-primary: #1e4620; --fcapt-bg: #f8fafc; --danger: #be123c; --success: #15803d; }
+        body { font-family: 'Inter', sans-serif; background: var(--fcapt-bg); margin: 0; }
+        .header { background: var(--fcapt-primary); color: white; padding: 1.2rem 2rem; display: flex; justify-content: space-between; align-items: center; }
         .container { max-width: 1000px; margin: 2rem auto; padding: 0 20px; }
-        
-        .card { 
-            background: white; 
-            padding: 25px; 
-            border-radius: 12px; 
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
-            border: 1px solid #e2e8f0; 
-        }
-
-        h3 { color: var(--fcapt-primary); margin-top: 0; margin-bottom: 20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; }
-        
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { text-align: left; padding: 14px; border-bottom: 1px solid #f1f5f9; }
-        th { background: #f8fafc; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
-        
-        .badge { padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #f1f5f9; }
+        th { background: #f8fafc; color: #64748b; font-size: 0.75rem; text-transform: uppercase; }
+        .badge { padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: bold; }
         .badge.danger { background: #fff1f2; color: var(--danger); }
         .badge.success { background: #f0fdf4; color: var(--success); }
-
-        .student-name { font-weight: 600; color: #0f172a; }
-        .reg-num { color: #64748b; font-size: 0.85rem; }
     </style>
 </head>
 <body>
-
     <header class="header">
-        <div class="header-info">
-            <h2 id="lec-name">Lecturer Portal</h2>
-            <small id="week-info">Current Academic Week: --</small>
+        <div>
+            <h2 id="lec-name" style="margin:0">...</h2>
+            <small id="week-info" style="opacity:0.9;">...</small>
         </div>
-        <button class="btn-logout" onclick="logout()">Logout</button>
+        <button onclick="logout()" style="background:none; border:1px solid white; color:white; padding:5px 10px; cursor:pointer; border-radius:4px;">Logout</button>
     </header>
-
     <main class="container">
         <div class="card">
-            <h3>Attendance Report & Eligibility</h3>
-            <table id="report-table">
-                <thead>
-                    <tr>
-                        <th>Student Details</th>
-                        <th>Course</th>
-                        <th>Attendance</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody id="report-body">
-                    <tr><td colspan="4" style="text-align:center; color:#94a3b8;">Initialising report data...</td></tr>
-                </tbody>
+            <h3 style="margin-top:0; color:var(--fcapt-primary);">Student Attendance Report</h3>
+            <table>
+                <thead><tr><th>Student & Class</th><th>Course</th><th>Stats</th><th>Status</th></tr></thead>
+                <tbody id="report-body"></tbody>
             </table>
         </div>
     </main>
-
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         const SB_URL = 'https://loblicverqcijkqatvhs.supabase.co';
@@ -100,77 +44,36 @@
         const user = JSON.parse(localStorage.getItem('fcapt_user'));
 
         async function init() {
-            if (!user || user.role !== 'lecturer') {
-                window.location.href = 'index.html';
-                return;
-            }
+            if (!user) window.location.href = 'index.html';
             document.getElementById('lec-name').innerText = "Lec. " + user.full_name;
 
-            try {
-                // 1. Get Semester Dates for calculations
-                const { data: settings } = await supabaseClient.from('settings').select('*').single();
-                const start = new Date(settings.resumption_date);
-                const end = new Date(settings.semester_end_date);
-                const totalWeeks = Math.ceil((end - start) / (7 * 24 * 60 * 60 * 1000));
-                const currentWeek = Math.max(1, Math.ceil((new Date() - start) / (7 * 24 * 60 * 60 * 1000)));
-                
-                document.getElementById('week-info').innerText = `Current Academic Week: ${currentWeek}`;
+            const { data: settings } = await supabaseClient.from('settings').select('*').single();
+            const start = new Date(settings.resumption_date);
+            const end = new Date(settings.semester_end_date);
+            const totalWeeks = Math.ceil((end - start) / (7 * 24 * 60 * 60 * 1000));
+            document.getElementById('week-info').innerText = `Total Semester Duration: ${totalWeeks} Weeks`;
 
-                // 2. Fetch Lecturer's Specific Courses
-                const { data: myCourses } = await supabaseClient.from('courses').select('id, course_code').eq('lecturer_id', user.id);
-                
-                if (!myCourses || myCourses.length === 0) {
-                    document.getElementById('report-body').innerHTML = '<tr><td colspan="4" style="text-align:center;">No courses assigned to your profile.</td></tr>';
-                    return;
-                }
+            const { data: myCourses } = await supabaseClient.from('courses').select('*').eq('lecturer_id', user.id);
+            const { data: att } = await supabaseClient.from('attendance').select('*').in('course_id', myCourses.map(c => c.id));
+            const { data: students } = await supabaseClient.from('profiles').select('*').eq('role', 'student');
 
-                // 3. Fetch Attendance for those courses
-                const { data: att } = await supabaseClient.from('attendance').select('*').in('course_id', myCourses.map(c => c.id));
-                
-                // 4. Fetch All Students
-                const { data: students } = await supabaseClient.from('profiles').select('id, full_name, reg_num').eq('role', 'student');
-
-                const tbody = document.getElementById('report-body');
-                tbody.innerHTML = '';
-
-                students.forEach(s => {
-                    myCourses.forEach(c => {
-                        const count = att ? att.filter(a => a.student_id === s.id && a.course_id === c.id).length : 0;
-                        
-                        // We only show students who have marked attendance at least once for that course
-                        if (count > 0) {
-                            const p = Math.round((count / totalWeeks) * 100);
-                            const statusClass = p < 75 ? 'danger' : 'success';
-                            const statusText = p < 75 ? 'Shortfall' : 'Eligible';
-
-                            tbody.innerHTML += `
-                                <tr>
-                                    <td>
-                                        <div class="student-name">${s.full_name}</div>
-                                        <div class="reg-num">${s.reg_num}</div>
-                                    </td>
-                                    <td><span style="font-weight:600; color:var(--fcapt-primary);">${c.course_code}</span></td>
-                                    <td><span style="font-weight:700;">${p}%</span> <small style="color:#94a3b8;">(${count}/${totalWeeks})</small></td>
-                                    <td><span class="badge ${statusClass}">${statusText}</span></td>
-                                </tr>`;
-                        }
-                    });
+            const tbody = document.getElementById('report-body');
+            students.forEach(s => {
+                myCourses.forEach(c => {
+                    const count = att.filter(a => a.student_id === s.id && a.course_id === c.id).length;
+                    if (count > 0) {
+                        const p = Math.round((count / totalWeeks) * 100);
+                        tbody.innerHTML += `<tr>
+                            <td><strong>${s.full_name}</strong><br><small style="color:#64748b">${s.program} (${s.student_class})</small></td>
+                            <td>${c.course_code}</td>
+                            <td>${p}% (${count}/${totalWeeks})</td>
+                            <td><span class="badge ${p < 75 ? 'danger' : 'success'}">${p < 75 ? 'Shortfall' : 'Eligible'}</span></td>
+                        </tr>`;
+                    }
                 });
-
-                if (tbody.innerHTML === '') {
-                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No attendance records found for your courses yet.</td></tr>';
-                }
-
-            } catch (err) {
-                console.error("Dashboard error:", err);
-            }
+            });
         }
-
-        function logout() {
-            localStorage.clear();
-            window.location.href = 'index.html';
-        }
-
+        function logout() { localStorage.clear(); window.location.href = 'index.html'; }
         init();
     </script>
 </body>
