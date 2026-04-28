@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FCAPT Cloud Attendance Portal</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header class="main-header">
+        <div class="header-container">
+            <div class="logo-section">
+                <img src="fcapt-logo.png" alt="FCAPT Logo" class="header-logo">
+                <h1 class="header-title">FCAPT Cloud Attendance Portal</h1>
+            </div>
+            <nav class="header-nav">
+                <span class="status-indicator">● System Online</span>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="login-card">
+            <h2>Welcome Back</h2>
+            <p>Please enter your credentials to access the portal.</p>
+            
+            <form id="loginForm">
+                <div class="input-group">
+                    <label for="reg_num">Registration Number / Email</label>
+                    <input type="text" id="reg_num" placeholder="e.g. FCAPT/HND/NCC/25/1140" required>
+                </div>
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit" class="btn-primary">Login to Portal</button>
+            </form>
+        </section>
+    </main>
+
+    <footer class="main-footer">
+        <p>&copy; 2026 Micah Bamidele | FCAPT Project Portfolio</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
