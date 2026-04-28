@@ -3,25 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cloud Attendance System - Student Portal</title>
+    <title>Cloud Attendance System</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .fade-out { opacity: 0; transition: opacity 0.5s ease; pointer-events: none; }
     </style>
 </head>
 <body class="p-4 md:p-8">
 
-    <div id="loader" class="fixed inset-0 flex items-center justify-center bg-white z-50">
-        <p class="text-blue-600 font-bold animate-pulse">Syncing Cloud Attendance...</p>
+    <div id="loader" class="fixed inset-0 flex flex-col items-center justify-center bg-white z-50">
+        <p class="text-blue-600 font-bold animate-pulse text-lg">Syncing Cloud Attendance...</p>
+        <p id="error-msg" class="text-red-500 mt-4 hidden text-sm px-4 text-center"></p>
     </div>
 
     <div class="max-w-6xl mx-auto">
         <header class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
             <div>
                 <h1 class="text-xs font-bold text-blue-500 uppercase tracking-widest mb-1">Attendance Portal</h1>
-                <h2 id="student-name" class="text-4xl font-black text-slate-900 leading-tight">---</h2>
+                <h2 id="student-name" class="text-4xl font-black text-slate-900 leading-tight italic">Loading...</h2>
                 <p class="text-slate-400 font-mono mt-2 text-sm">Identity: 065**********</p>
             </div>
             <div class="mt-6 md:mt-0 bg-blue-50 px-6 py-3 rounded-2xl">
@@ -31,11 +33,10 @@
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-center">
+            <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
                 <h3 class="text-slate-400 text-xs font-bold uppercase mb-4 tracking-wider">Overall Attendance</h3>
                 <div class="flex items-baseline gap-2">
-                    <span id="total-attendance" class="text-6xl font-black text-slate-900">0%</span>
-                    <span id="attendance-status" class="text-sm font-bold px-2 py-1 rounded-lg">Checking...</span>
+                    <span id="total-attendance" class="text-6xl font-black text-slate-900">--%</span>
                 </div>
             </div>
 
@@ -56,11 +57,9 @@
         </div>
 
         <section class="mt-10">
-            <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-                Course Attendance Breakdown
-            </h3>
+            <h3 class="text-xl font-bold text-slate-800 mb-6 px-2">Course Attendance Breakdown</h3>
             <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-                <table class="w-full text-left border-collapse">
+                <table class="w-full text-left">
                     <thead class="bg-slate-50 border-b border-slate-100">
                         <tr>
                             <th class="px-8 py-5 text-xs font-bold text-slate-400 uppercase">Course Module</th>
@@ -75,58 +74,58 @@
     </div>
 
     <script>
-        // Use your project's environment variables here
-        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
-        const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // Replace with your actual credentials
+        const SUPABASE_URL = 'https://plztbuirvlxlbmbuscwf.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsenRidWlydmx4bGJtYnVzY3dmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0MjQ5OTMsImV4cCI6MjA5MjAwMDk5M30.ZJY5wVNo3SbPEgS5u5bsSZg1g8D96ak9AT0VTCm6gi8';
+        
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         async function initPortal() {
+            const loader = document.getElementById('loader');
+            const errorEl = document.getElementById('error-msg');
+
             try {
-                const { data: { user } } = await supabase.auth.getUser();
-
-                if (user) {
-                    const { data: student, error } = await supabase
-                        .from('attendance_records')
-                        .select('*')
-                        .eq('student_id', user.id)
-                        .single();
-
-                    if (error) throw error;
-
-                    // Update DOM elements
-                    document.getElementById('student-name').innerText = student.full_name;
-                    document.getElementById('week-number').innerText = `Week ${student.current_week}`;
-                    document.getElementById('total-attendance').innerText = `${student.total_attendance_pct}%`;
-                    document.getElementById('reg-no').innerText = student.registration_no;
-                    document.getElementById('program-name').innerText = student.program;
-                    document.getElementById('class-name').innerText = student.class_name;
-
-                    // Status Logic
-                    const statusEl = document.getElementById('attendance-status');
-                    if (student.total_attendance_pct >= 75) {
-                        statusEl.innerText = 'Good Standing';
-                        statusEl.classList.add('bg-green-100', 'text-green-600');
-                    } else {
-                        statusEl.innerText = 'Below Requirement';
-                        statusEl.classList.add('bg-red-100', 'text-red-600');
-                    }
-
-                    // Build Course Table
-                    const courseList = document.getElementById('course-list');
-                    student.course_attendance_log.forEach(course => {
-                        const row = `
-                            <tr class="hover:bg-slate-50">
-                                <td class="px-8 py-5 font-semibold text-slate-700">${course.name}</td>
-                                <td class="px-8 py-5 text-right font-mono font-bold text-blue-600">${course.percentage}%</td>
-                            </tr>
-                        `;
-                        courseList.innerHTML += row;
-                    });
+                // Check for session
+                const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+                
+                if (authError || !user) {
+                    throw new Error("No active session found. Please log in.");
                 }
+
+                const { data: student, error } = await supabaseClient
+                    .from('attendance_records')
+                    .select('*')
+                    .eq('student_id', user.id)
+                    .single();
+
+                if (error) throw error;
+
+                // Update UI
+                document.getElementById('student-name').innerText = student.full_name;
+                document.getElementById('week-number').innerText = `Week ${student.current_week}`;
+                document.getElementById('total-attendance').innerText = `${student.total_attendance_pct}%`;
+                document.getElementById('reg-no').innerText = student.registration_no;
+                document.getElementById('program-name').innerText = student.program;
+                document.getElementById('class-name').innerText = student.class_name;
+
+                const courseList = document.getElementById('course-list');
+                student.course_attendance_log.forEach(course => {
+                    courseList.innerHTML += `
+                        <tr class="hover:bg-slate-50">
+                            <td class="px-8 py-5 font-semibold text-slate-700">${course.name}</td>
+                            <td class="px-8 py-5 text-right font-mono font-bold text-blue-600">${course.percentage}%</td>
+                        </tr>`;
+                });
+
+                // Hide loader
+                loader.classList.add('fade-out');
+                setTimeout(() => loader.style.display = 'none', 500);
+
             } catch (err) {
-                console.error("Portal Error:", err);
-            } finally {
-                document.getElementById('loader').classList.add('hidden');
+                console.error(err);
+                errorEl.innerText = err.message;
+                errorEl.classList.remove('hidden');
+                // Don't hide loader so the user can see the error
             }
         }
 
