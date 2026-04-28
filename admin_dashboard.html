@@ -3,72 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Hub | FCAPT</title>
+    <title>Admin Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
     <style>
+        :root { --fcapt-primary: #1e4620; --fcapt-bg: #f1f5f9; --card-bg: #ffffff; --text-main: #1e293b; --border-color: #e2e8f0; }
+        [data-theme="dark"] { --fcapt-bg: #0f172a; --card-bg: #1e293b; --text-main: #f1f5f9; --border-color: #334155; }
+        body { font-family: 'Inter', sans-serif; background: var(--fcapt-bg); color: var(--text-main); margin: 0; transition: 0.3s; }
         .header { background: #1a1a1a; color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
-        .nav-tabs { background: var(--card-bg); display: flex; border-bottom: 1px solid var(--border-color); padding: 0 2rem; position: sticky; top: 0; z-index: 10; }
-        .tab { padding: 1rem; cursor: pointer; font-weight: 600; color: var(--text-muted); border-bottom: 3px solid transparent; }
-        .tab.active { color: var(--fcapt-primary); border-bottom-color: var(--fcapt-primary); }
+        .nav-tabs { background: var(--card-bg); display: flex; border-bottom: 1px solid var(--border-color); overflow-x: auto; }
+        .tab { padding: 1rem 1.5rem; cursor: pointer; font-weight: 600; color: #64748b; white-space: nowrap; }
+        .tab.active { color: var(--fcapt-primary); border-bottom: 3px solid var(--fcapt-primary); }
+        .container { max-width: 900px; margin: 2rem auto; padding: 0 20px; }
+        .card { background: var(--card-bg); padding: 2rem; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 2rem; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+        input, select { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--card-bg); color: var(--text-main); box-sizing: border-box; }
+        .btn { background: var(--fcapt-primary); color: white; padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; }
         .hidden { display: none; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid var(--border-color); }
+        .theme-toggle { position: fixed; bottom: 20px; right: 20px; width: 45px; height: 45px; border-radius: 50%; background: var(--fcapt-primary); color: white; border: none; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <header class="header">
         <h2 style="margin:0">Admin Console</h2>
-        <button class="btn" onclick="logout()" style="padding: 6px 12px; font-size: 0.8rem;">Logout</button>
+        <button class="btn" onclick="logout()" style="background:transparent; border:1px solid white;">Logout</button>
     </header>
 
-    <nav class="nav-tabs">
-        <div class="tab active" onclick="showTab('system')">Semester</div>
-        <div class="tab" onclick="showTab('users')">Users</div>
-        <div class="tab" onclick="showTab('courses')">Courses</div>
-    </nav>
+    <div class="nav-tabs">
+        <div class="tab active" onclick="showTab('users')">Manage Users</div>
+        <div class="tab" onclick="showTab('courses')">Manage Courses</div>
+    </div>
 
     <main class="container">
-        <section id="tab-system" class="card">
-            <h3>Date Management</h3>
-            <div class="grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                <div><label>Resumption</label><input type="date" id="res_date"></div>
-                <div><label>End Date</label><input type="date" id="end_date"></div>
-            </div>
-            <button class="btn" onclick="saveSettings()" style="margin-top:1.5rem;">Save Timeline</button>
-        </section>
-
-        <section id="tab-users" class="card hidden">
-            <h3>Profile Creation</h3>
-            <div class="grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                <div><label>Name</label><input type="text" id="u_name"></div>
-                <div><label>Reg No.</label><input type="text" id="u_id"></div>
+        <section id="tab-users" class="card">
+            <h3>Add New User</h3>
+            <div class="grid">
+                <div><label>Full Name</label><input type="text" id="u_name"></div>
+                <div><label>Reg Number</label><input type="text" id="u_id"></div>
                 <div><label>Role</label><select id="u_role"><option value="student">Student</option><option value="lecturer">Lecturer</option></select></div>
-                <div><label>Password</label><input type="text" id="u_pass" value="Fcapt123"></div>
             </div>
-            <button class="btn" onclick="addUser()" style="margin-top:1.5rem;">Create User</button>
+            <button class="btn" onclick="addUser()" style="margin-top:20px;">Create User</button>
         </section>
 
         <section id="tab-courses" class="card hidden">
-            <h3>Course Reassignment</h3>
-            <input type="hidden" id="edit_id">
-            <div class="grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+            <h3>Course Registry & Reassignment</h3>
+            <input type="hidden" id="edit_cid">
+            <div class="grid">
                 <div><label>Code</label><input type="text" id="c_code"></div>
                 <div><label>Title</label><input type="text" id="c_title"></div>
                 <div><label>Lecturer</label><select id="c_lec"></select></div>
             </div>
-            <button class="btn" id="c_btn" onclick="handleCourse()" style="margin-top:1.5rem;">Save Course</button>
-            <div class="table-container">
-                <table id="course-list"><thead><tr><th>Code</th><th>Title</th><th>Lecturer</th><th>Action</th></tr></thead><tbody></tbody></table>
+            <button class="btn" onclick="handleCourse()" style="margin-top:20px;">Save Course</button>
+            <div style="overflow-x:auto;">
+                <table id="c-list"><thead><tr><th>Code</th><th>Lecturer</th><th>Action</th></tr></thead><tbody></tbody></table>
             </div>
         </section>
     </main>
 
+    <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="main.js"></script>
     <script>
         const SB_URL = 'https://loblicverqcijkqatvhs.supabase.co';
         const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvYmxpY3ZlcnFjaWprcWF0dmhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMTAyOTYsImV4cCI6MjA5MTY4NjI5Nn0.vV-rpPzniYgSTzBStfikL_SJc722-41ezkiJnI4nOPs';
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const target = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', target);
+            localStorage.setItem('fcapt_theme', target);
+        }
+        document.documentElement.setAttribute('data-theme', localStorage.getItem('fcapt_theme') || 'light');
 
         function showTab(t) {
             document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
@@ -85,38 +93,34 @@
             lecs.forEach(l => sel.innerHTML += `<option value="${l.id}">${l.full_name}</option>`);
 
             const { data: list } = await supabaseClient.from('courses').select('*, profiles(full_name)');
-            const tbody = document.querySelector('#course-list tbody');
+            const tbody = document.querySelector('#c-list tbody');
             tbody.innerHTML = '';
             list.forEach(c => {
-                tbody.innerHTML += `<tr><td>${c.course_code}</td><td>${c.course_title}</td><td>${c.profiles?.full_name || 'None'}</td><td><button class="btn" style="padding:4px 8px; font-size:10px;" onclick='editCourse(${JSON.stringify(c)})'>Edit</button></td></tr>`;
+                tbody.innerHTML += `<tr><td>${c.course_code}</td><td>${c.profiles?.full_name || 'None'}</td><td><button class="btn" style="padding:5px 10px; font-size:11px;" onclick='prepEdit(${JSON.stringify(c)})'>Edit</button></td></tr>`;
             });
         }
 
-        function editCourse(c) {
-            document.getElementById('edit_id').value = c.id;
+        function prepEdit(c) {
+            document.getElementById('edit_cid').value = c.id;
             document.getElementById('c_code').value = c.course_code;
             document.getElementById('c_title').value = c.course_title;
             document.getElementById('c_lec').value = c.lecturer_id || "";
-            document.getElementById('c_btn').innerText = "Update Course";
         }
 
         async function handleCourse() {
-            const id = document.getElementById('edit_id').value;
-            const payload = { course_code: document.getElementById('c_code').value, course_title: document.getElementById('c_title').value, lecturer_id: document.getElementById('c_lec').value || null };
-            if(id) await supabaseClient.from('courses').update(payload).eq('id', id);
-            else await supabaseClient.from('courses').insert([payload]);
-            alert("Done!"); loadCourses();
+            const id = document.getElementById('edit_cid').value;
+            const p = { course_code: document.getElementById('c_code').value, course_title: document.getElementById('c_title').value, lecturer_id: document.getElementById('c_lec').value || null };
+            if(id) await supabaseClient.from('courses').update(p).eq('id', id);
+            else await supabaseClient.from('courses').insert([p]);
+            alert("Updated!"); loadCourses();
         }
 
         async function addUser() {
-            await supabaseClient.from('profiles').insert([{ full_name: document.getElementById('u_name').value, reg_num: document.getElementById('u_id').value, role: document.getElementById('u_role').value, password: document.getElementById('u_pass').value }]);
-            alert("User Added");
+            await supabaseClient.from('profiles').insert([{ full_name: document.getElementById('u_name').value, reg_num: document.getElementById('u_id').value, role: document.getElementById('u_role').value, password: 'Fcapt123' }]);
+            alert("User Created!");
         }
 
-        async function saveSettings() {
-            await supabaseClient.from('settings').update({ resumption_date: document.getElementById('res_date').value, semester_end_date: document.getElementById('end_date').value }).eq('id', 1);
-            alert("System Updated");
-        }
+        function logout() { localStorage.clear(); window.location.href = 'index.html'; }
     </script>
 </body>
 </html>
