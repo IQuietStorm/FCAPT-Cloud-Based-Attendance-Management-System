@@ -3,48 +3,281 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Portal | FCAPT</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Student Portal | FCAPT Kano</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- 1. THEME & MOBILE CORE --- */
+        :root {
+            --fcapt-primary: #1e4620;
+            --fcapt-bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --success: #15803d;
+        }
+
+        [data-theme="dark"] {
+            --fcapt-bg: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--fcapt-bg);
+            color: var(--text-main);
+            margin: 0;
+            transition: 0.3s ease;
+            padding-bottom: 80px; /* Space for theme toggle */
+        }
+
+        /* --- 2. HEADER & LAYOUT --- */
+        .header {
+            background: var(--fcapt-primary);
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+            border-bottom: 4px solid rgba(0,0,0,0.1);
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 1.5rem auto;
+            padding: 0 15px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        /* --- 3. UI ELEMENTS --- */
+        .user-badge {
+            font-size: 0.85rem;
+            background: rgba(255,255,255,0.2);
+            padding: 4px 12px;
+            border-radius: 99px;
+            display: inline-block;
+            margin-top: 8px;
+        }
+
+        label { display: block; margin-bottom: 8px; font-weight: 700; font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; }
+
+        select {
+            width: 100%;
+            padding: 14px;
+            border-radius: 10px;
+            border: 2px solid var(--border-color);
+            background: var(--card-bg);
+            color: var(--text-main);
+            font-size: 1rem;
+            margin-bottom: 20px;
+            outline: none;
+        }
+
+        .btn {
+            width: 100%;
+            background: var(--fcapt-primary);
+            color: white;
+            padding: 16px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .btn:active { transform: scale(0.98); }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .stat-box {
+            background: var(--fcapt-bg);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--fcapt-primary);
+            color: white;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            font-size: 1.2rem;
+            z-index: 1000;
+        }
+
+        .logout-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+    </style>
 </head>
 <body>
-    <header style="background: var(--fcapt-primary); color: white; padding: 1rem 2rem;">
-        <h2 id="s-name" style="margin:0">...</h2>
-        <small id="s-meta">...</small>
+
+    <header class="header">
+        <h2 id="student-name" style="margin:0">Welcome</h2>
+        <div class="user-badge" id="student-meta">Loading Profile...</div>
     </header>
 
     <main class="container">
         <div class="card">
-            <h3>Mark Attendance</h3>
-            <select id="c-sel" style="margin-bottom:1rem;"></select>
-            <button class="btn" onclick="mark()" style="width:100%;">Confirm Presence</button>
+            <label>Today's Lecture</label>
+            <select id="course-select">
+                <option value="">Select Course...</option>
+            </select>
+            <button class="btn" onclick="markAttendance()">Mark My Attendance</button>
         </div>
-        <div class="card" style="margin-top:20px;">
-            <h3>My Stats</h3>
-            <div id="stats"></div>
+
+        <div class="card">
+            <h3 style="margin-top:0;">My Overview</h3>
+            <div id="stats-container">
+                <p style="color: var(--text-muted); font-size: 0.9rem;">Select a course above to see your attendance percentage.</p>
+            </div>
+            <div class="stat-grid" id="quick-stats">
+                <div class="stat-box">
+                    <div style="font-size: 0.7rem; color: var(--text-muted);">SEMESTER</div>
+                    <div style="font-weight: 700;">2026 / 1</div>
+                </div>
+                <div class="stat-box">
+                    <div style="font-size: 0.7rem; color: var(--text-muted);">MIN REQ.</div>
+                    <div style="font-weight: 700; color: var(--success);">75%</div>
+                </div>
+            </div>
         </div>
+
+        <a href="#" class="logout-link" onclick="logout()">Sign Out of Portal</a>
     </main>
 
+    <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="main.js"></script>
     <script>
+        // --- 1. CONFIGURATION ---
         const SB_URL = 'https://loblicverqcijkqatvhs.supabase.co';
         const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvYmxpY3ZlcnFjaWprcWF0dmhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMTAyOTYsImV4cCI6MjA5MTY4NjI5Nn0.vV-rpPzniYgSTzBStfikL_SJc722-41ezkiJnI4nOPs';
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+
         const user = JSON.parse(localStorage.getItem('fcapt_user'));
 
+        // --- 2. INITIALIZATION ---
         async function init() {
-            document.getElementById('s-name').innerText = user.full_name;
-            document.getElementById('s-meta').innerText = `${user.program} - ${user.student_class}`;
+            if (!user || user.role !== 'student') {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Set UI details
+            document.getElementById('student-name').innerText = user.full_name;
+            document.getElementById('student-meta').innerText = `${user.program} | ${user.student_class} | ${user.reg_num}`;
+            
+            // Apply theme
+            document.documentElement.setAttribute('data-theme', localStorage.getItem('fcapt_theme') || 'light');
+
+            // Fetch Courses
             const { data: courses } = await supabaseClient.from('courses').select('*');
-            const sel = document.getElementById('c-sel');
-            courses.forEach(c => sel.innerHTML += `<option value="${c.id}">${c.course_code}</option>`);
+            const select = document.getElementById('course-select');
+            courses.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = `${c.course_code}: ${c.course_title}`;
+                select.appendChild(opt);
+            });
         }
 
-        async function mark() {
-            const cid = document.getElementById('c-sel').value;
-            await supabaseClient.from('attendance').insert([{ student_id: user.id, course_id: cid }]);
-            alert("Presence Marked!");
+        // --- 3. ATTENDANCE LOGIC ---
+        async function markAttendance() {
+            const courseId = document.getElementById('course-select').value;
+            if (!courseId) {
+                alert("Please select a course first.");
+                return;
+            }
+
+            // Check if already marked today (Optional but recommended)
+            const today = new Date().toISOString().split('T')[0];
+            
+            const { data, error } = await supabaseClient
+                .from('attendance')
+                .insert([
+                    { 
+                        student_id: user.id, 
+                        course_id: courseId 
+                    }
+                ]);
+
+            if (error) {
+                alert("Error marking attendance. Please try again.");
+            } else {
+                alert("Attendance recorded successfully!");
+                updateStats(courseId);
+            }
         }
+
+        async function updateStats(courseId) {
+            // Assuming a 12-week semester for the calculation
+            const totalWeeks = 12;
+            const { data } = await supabaseClient
+                .from('attendance')
+                .select('*')
+                .eq('student_id', user.id)
+                .eq('course_id', courseId);
+
+            const count = data ? data.length : 0;
+            const percent = Math.round((count / totalWeeks) * 100);
+            
+            const statsContainer = document.getElementById('stats-container');
+            statsContainer.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <span style="font-weight: 600;">Current Progress:</span>
+                    <span style="font-size: 1.5rem; font-weight: 800; color: ${percent >= 75 ? 'var(--success)' : '#e11d48'}">${percent}%</span>
+                </div>
+                <div style="background: #e2e8f0; height: 8px; border-radius: 4px; overflow: hidden;">
+                    <div style="background: var(--fcapt-primary); width: ${percent}%; height: 100%;"></div>
+                </div>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 8px;">
+                    You have attended ${count} out of ${totalWeeks} required lectures.
+                </p>
+            `;
+        }
+
+        // --- 4. UTILITIES ---
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const target = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', target);
+            localStorage.setItem('fcapt_theme', target);
+        }
+
+        function logout() {
+            localStorage.removeItem('fcapt_user');
+            window.location.href = 'index.html';
+        }
+
+        // Run
         init();
     </script>
 </body>
