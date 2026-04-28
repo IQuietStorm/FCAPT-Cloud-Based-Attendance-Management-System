@@ -3,33 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lecturer Portal | FCAPT</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Lecturer Portal</title>
+    <link rel="stylesheet" href="style.css"> <style>
+        :root { --fcapt-primary: #1e4620; --fcapt-bg: #f8fafc; --card-bg: #ffffff; --text-main: #1e293b; --border-color: #e2e8f0; }
+        [data-theme="dark"] { --fcapt-bg: #0f172a; --card-bg: #1e293b; --text-main: #f1f5f9; --border-color: #334155; }
+        body { font-family: 'Inter', sans-serif; background: var(--fcapt-bg); color: var(--text-main); margin: 0; }
+        .header { background: var(--fcapt-primary); color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+        .container { max-width: 1000px; margin: 2rem auto; padding: 0 20px; }
+        .filter-bar { background: var(--card-bg); padding: 20px; border-radius: 12px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; border: 1px solid var(--border-color); }
+        .card { background: var(--card-bg); padding: 25px; border-radius: 12px; border: 1px solid var(--border-color); overflow-x: auto; }
+        select { padding: 10px; width: 100%; border-radius: 8px; background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color); }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid var(--border-color); }
+        .theme-toggle { position: fixed; bottom: 20px; right: 20px; width: 45px; height: 45px; border-radius: 50%; background: var(--fcapt-primary); color: white; border: none; cursor: pointer; }
+    </style>
 </head>
 <body>
-
-    <header style="background: var(--fcapt-primary); color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center;">
-        <h2 id="lec-title" style="margin:0">Lecturer Dashboard</h2>
-        <button class="btn" onclick="logout()" style="background:rgba(255,255,255,0.2);">Logout</button>
+    <header class="header">
+        <h2 id="lec-name">Lecturer Dashboard</h2>
+        <button onclick="logout()" style="background:rgba(255,255,255,0.2); color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">Logout</button>
     </header>
 
     <main class="container">
-        <div class="card" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+        <div class="filter-bar">
             <div><label>Course</label><select id="f-course" onchange="filter()"><option value="all">All Courses</option></select></div>
             <div><label>Program</label><select id="f-prog" onchange="filter()"><option value="all">All Programs</option><option value="CPS">CPS</option><option value="AEM">AEM</option></select></div>
-            <div><label>Class</label><select id="f-class" onchange="filter()"><option value="all">All Years</option><option value="ND I">ND I</option><option value="ND II">ND II</option></select></div>
+            <div><label>Class</label><select id="f-class" onchange="filter()"><option value="all">All Classes</option><option value="ND I">ND I</option><option value="ND II">ND II</option></select></div>
         </div>
 
-        <div class="card table-container">
-            <table id="report">
-                <thead><tr><th>Student</th><th>Program/Class</th><th>Course</th><th>Attendance</th><th>Status</th></tr></thead>
-                <tbody></tbody>
+        <div class="card">
+            <table>
+                <thead><tr><th>Student</th><th>Program/Class</th><th>Course</th><th>Attendance</th></tr></thead>
+                <tbody id="r-body"></tbody>
             </table>
         </div>
     </main>
 
+    <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="main.js"></script>
     <script>
         const SB_URL = 'https://loblicverqcijkqatvhs.supabase.co';
         const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvYmxpY3ZlcnFjaWprcWF0dmhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMTAyOTYsImV4cCI6MjA5MTY4NjI5Nn0.vV-rpPzniYgSTzBStfikL_SJc722-41ezkiJnI4nOPs';
@@ -37,35 +49,44 @@
         const user = JSON.parse(localStorage.getItem('fcapt_user'));
         let master = [];
 
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const target = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', target);
+            localStorage.setItem('fcapt_theme', target);
+        }
+        document.documentElement.setAttribute('data-theme', localStorage.getItem('fcapt_theme') || 'light');
+
         async function init() {
-            document.getElementById('lec-title').innerText = "Lec. " + user.full_name;
-            const { data: myCourses } = await supabaseClient.from('courses').select('*').eq('lecturer_id', user.id);
-            const { data: att } = await supabaseClient.from('attendance').select('*');
-            const { data: students } = await supabaseClient.from('profiles').select('*').eq('role', 'student');
-            
-            const csel = document.getElementById('f-course');
-            myCourses.forEach(c => {
-                csel.innerHTML += `<option value="${c.id}">${c.course_code}</option>`;
-                students.forEach(s => {
-                    const count = att.filter(a => a.student_id === s.id && a.course_id === c.id).length;
-                    if(count > 0) master.push({ s, c, count, p: Math.round((count/12)*100) });
+            document.getElementById('lec-name').innerText = "Lec. " + user.full_name;
+            const { data: myC } = await supabaseClient.from('courses').select('*').eq('lecturer_id', user.id);
+            const { data: st } = await supabaseClient.from('profiles').select('*').eq('role', 'student');
+            const { data: at } = await supabaseClient.from('attendance').select('*');
+
+            const cs = document.getElementById('f-course');
+            myC.forEach(c => {
+                cs.innerHTML += `<option value="${c.id}">${c.course_code}</option>`;
+                st.forEach(s => {
+                    const cnt = at.filter(a => a.student_id === s.id && a.course_id === c.id).length;
+                    if(cnt > 0) master.push({ s, c, cnt, p: Math.round((cnt/12)*100) });
                 });
             });
             filter();
         }
 
         function filter() {
-            const c = document.getElementById('f-course').value;
-            const p = document.getElementById('f-prog').value;
-            const cl = document.getElementById('f-class').value;
-            const filtered = master.filter(m => (c === 'all' || m.c.id == c) && (p === 'all' || m.s.program === p) && (cl === 'all' || m.s.student_class === cl));
-            
-            const tbody = document.querySelector('#report tbody');
-            tbody.innerHTML = '';
-            filtered.forEach(m => {
-                tbody.innerHTML += `<tr><td>${m.s.full_name}</td><td>${m.s.program} ${m.s.student_class}</td><td>${m.c.course_code}</td><td>${m.p}%</td><td>${m.p < 75 ? '❌ Short' : '✅ OK'}</td></tr>`;
+            const cv = document.getElementById('f-course').value;
+            const pv = document.getElementById('f-prog').value;
+            const clv = document.getElementById('f-class').value;
+
+            const res = master.filter(m => (cv === 'all' || m.c.id == cv) && (pv === 'all' || m.s.program === pv) && (clv === 'all' || m.s.student_class === clv));
+            const tb = document.getElementById('r-body');
+            tb.innerHTML = '';
+            res.forEach(m => {
+                tb.innerHTML += `<tr><td>${m.s.full_name}</td><td>${m.s.program} (${m.s.student_class})</td><td>${m.c.course_code}</td><td>${m.p}%</td></tr>`;
             });
         }
+        function logout() { localStorage.clear(); window.location.href = 'index.html'; }
         init();
     </script>
 </body>
