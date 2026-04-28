@@ -9,43 +9,36 @@
         :root { --fcapt-green: #2d5a27; --accent-gold: #c5a059; --danger: #d32f2f; }
         body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; margin: 0; }
         .header { background: var(--fcapt-green); color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--accent-gold); }
-        .container { max-width: 600px; margin: 2rem auto; padding: 0 20px; }
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .progress-bg { background: #eee; border-radius: 20px; height: 20px; width: 100%; margin: 10px 0; overflow: hidden; }
-        #progress-bar { background: var(--fcapt-green); height: 100%; width: 0%; transition: width 0.8s; }
-        #warning-box { display: none; background: #ffebee; border-left: 5px solid var(--danger); color: var(--danger); padding: 15px; margin-bottom: 20px; font-weight: 600; border-radius: 4px; }
-        .btn-checkin { width: 100%; padding: 15px; background: var(--fcapt-green); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 1rem; }
-        .btn-checkin:disabled { background: #ccc; cursor: not-allowed; }
-        select { width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #ddd; margin-bottom: 20px; font-size: 1rem; }
-        label { display: block; margin-bottom: 8px; font-weight: 600; color: #444; }
+        .container { max-width: 800px; margin: 2rem auto; padding: 0 20px; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .course-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #eee; }
+        .progress-bg { background: #eee; border-radius: 10px; height: 10px; width: 150px; overflow: hidden; margin-left: 10px; }
+        .progress-fill { background: var(--fcapt-green); height: 100%; width: 0%; transition: width 0.5s; }
+        .warning { color: var(--danger); font-weight: bold; font-size: 0.8rem; }
+        select, .btn-checkin { width: 100%; padding: 12px; border-radius: 6px; margin-top: 10px; }
+        .btn-checkin { background: var(--fcapt-green); color: white; border: none; font-weight: 700; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <header class="header">
         <div>
-            <h2 style="margin:0" id="user-name">Loading...</h2>
-            <small id="user-reg">ID Number</small>
+            <h2 style="margin:0" id="user-name">Student</h2>
+            <small id="week-display">Calculating Week...</small>
         </div>
-        <button style="background:none; border:1px solid white; color:white; padding:5px 15px; cursor:pointer; border-radius:4px;" onclick="logout()">Logout</button>
+        <button onclick="logout()" style="background:none; border:1px solid white; color:white; padding:5px 10px; cursor:pointer;">Logout</button>
     </header>
 
     <main class="container">
-        <div id="warning-box">⚠️ WEEK 9 WARNING: Attendance is below 75%. Eligibility at risk.</div>
-
         <div class="card">
-            <h3>Attendance Status</h3>
-            <p>Overall Percentage: <span id="percent-text">0%</span></p>
-            <div class="progress-bg"><div id="progress-bar"></div></div>
+            <h3>Course Attendance Breakdown</h3>
+            <div id="course-list">Loading courses...</div>
         </div>
 
         <div class="card">
             <h3>Mark Attendance</h3>
-            <label for="course-select">Select Your Current Course:</label>
-            <select id="course-select">
-                <option value="">Loading courses...</option>
-            </select>
-            <button id="checkin-btn" class="btn-checkin" onclick="markAttendance()">Submit Attendance</button>
+            <select id="course-select"><option>Select Course</option></select>
+            <button id="checkin-btn" class="btn-checkin" onclick="markAttendance()">Confirm Attendance</button>
         </div>
     </main>
 
@@ -56,56 +49,63 @@
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
         const user = JSON.parse(localStorage.getItem('fcapt_user'));
-        if (!user) {
-            window.location.href = 'index.html';
-        } else {
+        let currentWeek = 1;
+        let totalSemesterWeeks = 12;
+
+        async function init() {
+            if (!user) window.location.href = 'index.html';
             document.getElementById('user-name').innerText = user.full_name;
-            document.getElementById('user-reg').innerText = user.reg_num;
-            loadStats();
-            fetchCourses();
+            
+            // 1. Get Semester Dates from Settings
+            const { data: settings } = await supabaseClient.from('settings').select('*').single();
+            const start = new Date(settings.resumption_date);
+            const end = new Date(settings.semester_end_date);
+            const today = new Date();
+            
+            currentWeek = Math.ceil((today - start) / (7 * 24 * 60 * 60 * 1000));
+            totalSemesterWeeks = Math.ceil((end - start) / (7 * 24 * 60 * 60 * 1000));
+            document.getElementById('week-display').innerText = `Week ${currentWeek} of ${totalSemesterWeeks}`;
+
+            loadCourseAttendance();
         }
 
-        async function fetchCourses() {
-            const { data, error } = await supabaseClient.from('courses').select('id, course_code, course_title');
+        async function loadCourseAttendance() {
+            const { data: courses } = await supabaseClient.from('courses').select('*');
+            const { data: attendance } = await supabaseClient.from('attendance').select('course_id').eq('student_id', user.id);
+            
+            const list = document.getElementById('course-list');
             const select = document.getElementById('course-select');
-            if (data) {
-                select.innerHTML = '<option value="">-- Select Course --</option>';
-                data.forEach(c => {
-                    select.innerHTML += `<option value="${c.id}">${c.course_code}: ${c.course_title}</option>`;
-                });
-            }
-        }
+            list.innerHTML = '';
+            select.innerHTML = '<option value="">-- Choose Course --</option>';
 
-        async function loadStats() {
-            const { count } = await supabaseClient.from('attendance').select('*', { count: 'exact' }).eq('student_id', user.id);
-            const percentage = Math.round(((count || 0) / 12) * 100);
-            document.getElementById('percent-text').innerText = percentage + "%";
-            document.getElementById('progress-bar').style.width = percentage + "%";
-            if (percentage < 75) document.getElementById('warning-box').style.display = 'block';
+            courses.forEach(course => {
+                const count = attendance.filter(a => a.course_id === course.id).length;
+                const percent = Math.round((count / totalSemesterWeeks) * 100);
+                
+                list.innerHTML += `
+                    <div class="course-row">
+                        <div>
+                            <strong>${course.course_code}</strong><br>
+                            ${percent < 75 && currentWeek >= 9 ? '<span class="warning">Low Attendance Risk</span>' : ''}
+                        </div>
+                        <div style="display:flex; align-items:center;">
+                            <span>${percent}%</span>
+                            <div class="progress-bg"><div class="progress-fill" style="width:${percent}%"></div></div>
+                        </div>
+                    </div>`;
+                select.innerHTML += `<option value="${course.id}">${course.course_code}</option>`;
+            });
         }
 
         async function markAttendance() {
-            const courseId = document.getElementById('course-select').value;
-            if(!courseId) return alert("Please select a course!");
-
-            const btn = document.getElementById('checkin-btn');
-            btn.disabled = true;
-            btn.innerText = "Processing...";
-
-            const { error } = await supabaseClient.from('attendance').insert([{ student_id: user.id, course_id: courseId, week_number: 9 }]);
-
-            if (error) {
-                alert("Error: " + error.message);
-                btn.disabled = false;
-                btn.innerText = "Submit Attendance";
-            } else {
-                alert("Attendance Recorded Successfully!");
-                btn.innerText = "Checked-In";
-                loadStats();
-            }
+            const cid = document.getElementById('course-select').value;
+            if(!cid) return alert("Select course");
+            const { error } = await supabaseClient.from('attendance').insert([{ student_id: user.id, course_id: cid, week_number: currentWeek }]);
+            if(!error) { alert("Marked!"); loadCourseAttendance(); }
         }
 
         function logout() { localStorage.clear(); window.location.href = 'index.html'; }
+        init();
     </script>
 </body>
 </html>
