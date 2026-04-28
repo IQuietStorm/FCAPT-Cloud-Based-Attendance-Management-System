@@ -6,90 +6,17 @@
     <title>Lecturer Dashboard | FCAPT</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --fcapt-green: #2d5a27;
-            --accent-gold: #c5a059;
-            --white: #ffffff;
-            --bg: #f4f7f6;
-        }
-
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg); margin: 0; }
-
-        /* Header */
-        .header {
-            background: var(--fcapt-green);
-            color: white;
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 4px solid var(--accent-gold);
-        }
-
-        .container { max-width: 1000px; margin: 2rem auto; padding: 0 20px; }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            text-align: center;
-        }
-
-        .stat-card h3 { color: #666; font-size: 0.9rem; margin: 0; }
-        .stat-card p { font-size: 2rem; font-weight: 700; color: var(--fcapt-green); margin: 10px 0 0; }
-
-        /* Real-time Notifications List */
-        .log-container {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            overflow: hidden;
-        }
-
-        .log-header {
-            background: #f8f9fa;
-            padding: 15px 20px;
-            border-bottom: 1px solid #eee;
-            font-weight: 600;
-        }
-
-        #attendance-log {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .log-item {
-            padding: 15px 20px;
-            border-bottom: 1px solid #f0f0f0;
-            display: flex;
-            justify-content: space-between;
-            animation: fadeIn 0.5s ease;
-        }
-
-        @keyframes fadeIn {
-            from { background: #fffde7; transform: translateY(-10px); }
-            to { background: white; transform: translateY(0); }
-        }
-
-        .logout-btn {
-            background: transparent;
-            color: white;
-            border: 1px solid white;
-            padding: 8px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
+        :root { --fcapt-green: #2d5a27; --accent-gold: #c5a059; --white: #ffffff; }
+        body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; margin: 0; }
+        .header { background: var(--fcapt-green); color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--accent-gold); }
+        .container { max-width: 900px; margin: 2rem auto; padding: 0 20px; }
+        .stat-card { background: white; padding: 1.5rem; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); text-align: center; margin-bottom: 20px; }
+        .log-container { background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .log-header { background: #f8f9fa; padding: 15px 20px; border-bottom: 1px solid #eee; font-weight: 600; }
+        #attendance-log { list-style: none; padding: 0; margin: 0; }
+        .log-item { padding: 15px 20px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; animation: slideDown 0.4s ease; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .logout-btn { background: transparent; color: white; border: 1px solid white; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -97,27 +24,20 @@
     <header class="header">
         <div>
             <h2 style="margin:0">Dr. <span id="lecturer-name">Lecturer</span></h2>
-            <small>FCAPT Cloud Attendance System</small>
+            <small>Live Attendance Feed</small>
         </div>
         <button class="logout-btn" onclick="logout()">Logout</button>
     </header>
 
     <main class="container">
-        <div class="stats-grid">
-            <div class="stat-card">
-                <h3>Today's Attendance</h3>
-                <p id="total-count">0</p>
-            </div>
-            <div class="stat-card">
-                <h3>Session Status</h3>
-                <p style="color: #2e7d32; font-size: 1.2rem;">● Active</p>
-            </div>
+        <div class="stat-card">
+            <h3>Students Present Today</h3>
+            <p id="total-count" style="font-size: 2.5rem; color: var(--fcapt-green); margin: 10px 0;">0</p>
         </div>
 
         <div class="log-container">
-            <div class="log-header">Live Check-in Feed</div>
-            <ul id="attendance-log">
-                </ul>
+            <div class="log-header">Real-time Check-ins</div>
+            <ul id="attendance-log"></ul>
         </div>
     </main>
 
@@ -125,56 +45,34 @@
     <script>
         const SB_URL = 'https://loblicverqcijkqatvhs.supabase.co';
         const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvYmxpY3ZlcnFjaWprcWF0dmhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMTAyOTYsImV4cCI6MjA5MTY4NjI5Nn0.vV-rpPzniYgSTzBStfikL_SJc722-41ezkiJnI4nOPs';
-        const supabase = window.supabase.createClient(SB_URL, SB_KEY);
+        const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
-        // 1. Get Logged-in User Info
         const user = JSON.parse(localStorage.getItem('fcapt_user'));
-        if (!user || user.role !== 'lecturer') {
-            window.location.href = 'index.html';
-        }
+        if (!user || user.role !== 'lecturer') window.location.href = 'index.html';
         document.getElementById('lecturer-name').innerText = user.full_name;
 
-        // 2. Real-time Subscription
-        const channel = supabase
-            .channel('live-attendance')
-            .on('postgres_changes', { 
-                event: 'INSERT', 
-                schema: 'public', 
-                table: 'attendance' 
-            }, async (payload) => {
-                // When a new row is added to 'attendance', update the UI
-                addLogItem(payload.new);
+        let count = 0;
+
+        // Listen for new attendance rows
+        supabaseClient
+            .channel('any')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'attendance' }, async (payload) => {
+                const { data: student } = await supabaseClient.from('profiles').select('full_name').eq('id', payload.new.student_id).single();
+                updateUI(student ? student.full_name : 'Unknown Student', payload.new.check_in_time);
             })
             .subscribe();
 
-        // 3. Update UI Function
-        let count = 0;
-        async function addLogItem(data) {
-            const list = document.getElementById('attendance-log');
-            
-            // Get student name from profiles table using the ID
-            const { data: student } = await supabase
-                .from('profiles')
-                .select('full_name, reg_num')
-                .eq('id', data.student_id)
-                .single();
-
+        function updateUI(name, time) {
+            const log = document.getElementById('attendance-log');
             const li = document.createElement('li');
             li.className = 'log-item';
-            li.innerHTML = `
-                <span><strong>${student ? student.full_name : 'Unknown'}</strong> (${student ? student.reg_num : 'N/A'})</span>
-                <span style="color: #888;">${new Date(data.check_in_time).toLocaleTimeString()}</span>
-            `;
-            list.prepend(li); // Add to top of list
-
+            li.innerHTML = `<span><strong>${name}</strong></span><span style="color:#888">${new Date(time).toLocaleTimeString()}</span>`;
+            log.prepend(li);
             count++;
             document.getElementById('total-count').innerText = count;
         }
 
-        function logout() {
-            localStorage.clear();
-            window.location.href = 'index.html';
-        }
+        function logout() { localStorage.clear(); window.location.href = 'index.html'; }
     </script>
 </body>
 </html>
