@@ -6,26 +6,41 @@
     <title>FCAPT Portal | Login</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --fcapt-green: #2d5a27; --accent-gold: #c5a059; }
-        body { font-family: 'Inter', sans-serif; background: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { background: white; padding: 2.5rem; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 380px; border-top: 5px solid var(--fcapt-green); }
+        :root { 
+            --fcapt-primary: #1e4620; /* Official Deep Green */
+            --fcapt-secondary: #2d5a27; 
+            --fcapt-bg: #f8fafc;
+            --fcapt-text: #1e293b;
+            --white: #ffffff;
+        }
+        body { font-family: 'Inter', sans-serif; background: var(--fcapt-bg); display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; color: var(--fcapt-text); }
+        .card { background: var(--white); padding: 2.5rem; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 380px; border-bottom: 6px solid var(--fcapt-primary); }
+        .logo-area { text-align: center; margin-bottom: 1.5rem; }
+        .logo-area h2 { color: var(--fcapt-primary); margin: 0; letter-spacing: -0.5px; }
+        .logo-area p { font-size: 0.8rem; color: #64748b; margin-top: 5px; }
         .input-group { margin-top: 1.2rem; }
-        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem; }
-        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
-        .btn { width: 100%; background: var(--fcapt-green); color: white; padding: 14px; border: none; border-radius: 6px; margin-top: 1.5rem; font-weight: 700; cursor: pointer; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.85rem; color: #475569; }
+        input { width: 100%; padding: 14px; border: 1.5px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; transition: border-color 0.2s; outline: none; }
+        input:focus { border-color: var(--fcapt-primary); }
+        .btn { width: 100%; background: var(--fcapt-primary); color: white; padding: 14px; border: none; border-radius: 8px; margin-top: 2rem; font-weight: 700; cursor: pointer; transition: transform 0.1s, background 0.2s; }
+        .btn:active { transform: scale(0.98); }
+        .btn:hover { background: var(--fcapt-secondary); }
     </style>
 </head>
 <body>
     <div class="card">
-        <h2 style="color: var(--fcapt-green); margin-top: 0;">FCAPT Portal</h2>
+        <div class="logo-area">
+            <h2>FCAPT KANO</h2>
+            <p>Cloud Attendance System</p>
+        </div>
         <form id="loginForm">
             <div class="input-group">
                 <label>ID Number</label>
-                <input type="text" id="reg_num" required>
+                <input type="text" id="reg_num" placeholder="Enter Registration/Staff ID" required>
             </div>
             <div class="input-group">
                 <label>Password</label>
-                <input type="password" id="password" required>
+                <input type="password" id="password" placeholder="••••••••" required>
             </div>
             <button type="submit" class="btn" id="loginBtn">Sign In</button>
         </form>
@@ -48,15 +63,9 @@
                 alert("Invalid Credentials");
             } else {
                 localStorage.setItem('fcapt_user', JSON.stringify(data));
-                
-                // Redirect based on ROLE, not name
-                if (data.role === 'admin') {
-                    window.location.href = 'admin_dashboard.html';
-                } else if (data.role === 'lecturer') {
-                    window.location.href = 'lecturer_dashboard.html';
-                } else {
-                    window.location.href = 'student_portal.html';
-                }
+                if (data.role === 'admin') window.location.href = 'admin_dashboard.html';
+                else if (data.role === 'lecturer') window.location.href = 'lecturer_dashboard.html';
+                else window.location.href = 'student_portal.html';
             }
         });
     </script>
