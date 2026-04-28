@@ -1,9 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    style="text-align: center; margin-bottom: 2rem;">
-    <img src="logo.png" alt="FCAPT Logo" style="height: 80px; margin-bottom: 10px;">
-    <h2 style="color: var(--fcapt-primary); margin: 0;">FCAPT PORTAL | LOGIN</h2>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FCAPT Portal | Login</title>
@@ -12,24 +9,25 @@
         :root { --fcapt-primary: #1e4620; --fcapt-bg: #f8fafc; --card-bg: #ffffff; --text-main: #1e293b; --border-color: #e2e8f0; }
         [data-theme="dark"] { --fcapt-bg: #0f172a; --card-bg: #1e293b; --text-main: #f1f5f9; --border-color: #334155; }
         body { font-family: 'Inter', sans-serif; background: var(--fcapt-bg); color: var(--text-main); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; transition: 0.3s; }
-        .card { background: var(--card-bg); padding: 2.5rem; border-radius: 16px; border: 1px solid var(--border-color); width: 100%; max-width: 380px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-        .input-group { margin-bottom: 1.2rem; }
+        .card { background: var(--card-bg); padding: 2.5rem; border-radius: 16px; border: 1px solid var(--border-color); width: 100%; max-width: 380px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; }
+        .input-group { margin-bottom: 1.2rem; text-align: left; }
         label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.85rem; color: #64748b; }
         input, select { width: 100%; padding: 12px; border: 1.5px solid var(--border-color); border-radius: 8px; background: var(--card-bg); color: var(--text-main); box-sizing: border-box; }
         .btn { width: 100%; background: var(--fcapt-primary); color: white; padding: 14px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; }
         .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); }
-        .modal-content { background: var(--card-bg); margin: 15% auto; padding: 30px; border-radius: 12px; width: 90%; max-width: 400px; }
+        .modal-content { background: var(--card-bg); margin: 15% auto; padding: 30px; border-radius: 12px; width: 90%; max-width: 400px; text-align: left; }
         .theme-toggle { position: fixed; bottom: 20px; right: 20px; width: 45px; height: 45px; border-radius: 50%; background: var(--fcapt-primary); color: white; border: none; cursor: pointer; z-index: 1000; }
+        .logo { height: 80px; margin-bottom: 15px; }
     </style>
 </head>
 <body>
-
     <div class="card">
-        <h2 style="color: var(--fcapt-primary); text-align: center;">FCAPT KANO</h2>
+        <img src="logo.png" alt="FCAPT Logo" class="logo">
+        <h2 style="color: var(--fcapt-primary); margin-bottom: 20px;">FCAPT PORTAL | LOGIN</h2>
         <form id="loginForm">
             <div class="input-group">
                 <label>ID Number</label>
-                <input type="text" id="reg_num" placeholder="e.g. Administrator" required>
+                <input type="text" id="reg_num" placeholder="Enter ID" required>
             </div>
             <div class="input-group">
                 <label>Password</label>
@@ -55,7 +53,6 @@
             <button class="btn" onclick="submitProfile()" style="margin-top:20px;">Save & Enter</button>
         </div>
     </div>
-
     <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
