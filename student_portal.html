@@ -38,8 +38,61 @@
         </div>
 
         <div class="card" style="text-align: center;">
-            <button id="checkin-btn" class="btn-checkin" onclick="markAttendance()">Mark Attendance (Week 9)</button>
-        </div>
+    <h3>Mark Attendance</h3>
+    <div style="margin-bottom: 15px;">
+        <label style="display:block; margin-bottom:5px;">Select Course:</label>
+        <select id="course-select" style="width:100%; padding:10px; border-radius:5px;">
+            <option value="">Loading courses...</option>
+        </select>
+    </div>
+    <button id="checkin-btn" class="btn-checkin" onclick="markAttendance()">Confirm Check-In</button>
+</div>
+
+<script>
+// Add this inside your existing <script> after loadStats()
+async function fetchCourses() {
+    const { data, error } = await supabaseClient.from('courses').select('id, course_code, course_title');
+    const select = document.getElementById('course-select');
+    
+    if (data) {
+        select.innerHTML = '<option value="">-- Choose Course --</option>';
+        data.forEach(course => {
+            select.innerHTML += `<option value="${course.id}">${course.course_code}: ${course.course_title}</option>`;
+        });
+    }
+}
+
+// Update your markAttendance function to use the selected value
+async function markAttendance() {
+    const courseId = document.getElementById('course-select').value;
+    if (!courseId) {
+        alert("Please select a course first!");
+        return;
+    }
+
+    const btn = document.getElementById('checkin-btn');
+    btn.disabled = true;
+    
+    const { error } = await supabaseClient
+        .from('attendance')
+        .insert([{ 
+            student_id: user.id, 
+            course_id: courseId, // Dynamic ID from dropdown
+            week_number: 9 
+        }]);
+
+    if (error) {
+        alert("Error: " + error.message);
+        btn.disabled = false;
+    } else {
+        alert("Attendance Marked!");
+        loadStats();
+    }
+}
+
+// Call fetchCourses() when page loads
+fetchCourses();
+</script>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
