@@ -6,26 +6,28 @@
     <title>Admin Dashboard | FCAPT</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --fcapt-green: #2d5a27; --accent-gold: #c5a059; }
-        body { font-family: 'Inter', sans-serif; background: #f4f7f6; margin: 0; }
-        .header { background: #333; color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--accent-gold); }
-        .container { max-width: 500px; margin: 3rem auto; padding: 0 20px; }
-        .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        :root { --fcapt-primary: #1e4620; --fcapt-bg: #f1f5f9; }
+        body { font-family: 'Inter', sans-serif; background: var(--fcapt-bg); margin: 0; color: #1e293b; }
+        .header { background: #1a1a1a; color: white; padding: 1.2rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--fcapt-primary); }
+        .container { max-width: 500px; margin: 4rem auto; padding: 0 20px; }
+        .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        h3 { color: var(--fcapt-primary); margin-top: 0; border-bottom: 1px solid #edf2f7; padding-bottom: 10px; }
         .input-group { margin-bottom: 1.5rem; }
-        label { display: block; margin-bottom: 8px; font-weight: 600; }
-        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
-        .btn-save { width: 100%; background: var(--accent-gold); color: white; padding: 14px; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #475569; font-size: 0.9rem; }
+        input { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
+        .btn-save { width: 100%; background: var(--fcapt-primary); color: white; padding: 14px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+        .btn-save:hover { background: #143216; }
     </style>
 </head>
 <body>
     <header class="header">
-        <h2 style="margin:0">Central Admin</h2>
-        <button onclick="logout()" style="background:none; border:1px solid white; color:white; padding:5px 10px; cursor:pointer;">Logout</button>
+        <h2 style="margin:0; font-size: 1.2rem;">FCAPT Admin Console</h2>
+        <button onclick="logout()" style="background:transparent; border:1px solid rgba(255,255,255,0.4); color:white; padding:6px 12px; cursor:pointer; border-radius:4px;">Logout</button>
     </header>
 
     <main class="container">
         <div class="card">
-            <h3 style="margin-top:0">Semester Configuration</h3>
+            <h3>Semester Configuration</h3>
             <div class="input-group">
                 <label>Resumption Date</label>
                 <input type="date" id="res_date">
@@ -34,7 +36,7 @@
                 <label>End of Semester</label>
                 <input type="date" id="end_date">
             </div>
-            <button class="btn-save" onclick="saveSettings()">Update System Dates</button>
+            <button class="btn-save" onclick="saveSettings()">Update System Parameters</button>
         </div>
     </main>
 
@@ -59,7 +61,7 @@
             const res = document.getElementById('res_date').value;
             const end = document.getElementById('end_date').value;
             const { error } = await supabaseClient.from('settings').update({ resumption_date: res, semester_end_date: end }).eq('id', 1);
-            if (!error) alert("Settings updated successfully!");
+            if (!error) alert("System dates synchronized successfully.");
         }
 
         function logout() { localStorage.clear(); window.location.href = 'index.html'; }
