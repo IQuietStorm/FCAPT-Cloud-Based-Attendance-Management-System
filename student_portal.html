@@ -57,7 +57,7 @@
         document.documentElement.setAttribute('data-theme', localStorage.getItem('fcapt_theme') || 'light');
 
         async function init() {
-            document.getElementById('student-meta').innerText = `${user.program} | ${user.student_class} | ${user.reg_num}`;
+            document.getElementById('student-meta').innerText = `${user.full_name} | ${user.program} | ${user.student_class} | ${user.reg_num}`;
             const { data: courses } = await supabaseClient.from('courses').select('*');
             const select = document.getElementById('course-select');
             courses.forEach(c => {
