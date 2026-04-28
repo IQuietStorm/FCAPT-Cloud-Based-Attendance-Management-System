@@ -6,99 +6,77 @@
     <title>Student Portal | FCAPT</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --fcapt-primary: #1e4620; --fcapt-accent: #f8fafc; --danger: #be123c; }
-        body { font-family: 'Inter', sans-serif; background: #f8fafc; margin: 0; color: #1e293b; }
-        .header { background: var(--fcapt-primary); color: white; padding: 1.5rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        :root { --fcapt-primary: #1e4620; --danger: #be123c; }
+        body { font-family: 'Inter', sans-serif; background: #f8fafc; margin: 0; }
+        .header { background: var(--fcapt-primary); color: white; padding: 1.2rem 2rem; display: flex; justify-content: space-between; align-items: center; }
         .container { max-width: 800px; margin: 2rem auto; padding: 0 20px; }
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 25px; border: 1px solid #e2e8f0; }
-        .course-item { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid #f1f5f9; }
-        .progress-bar { background: #f1f5f9; border-radius: 99px; height: 10px; width: 140px; overflow: hidden; margin-left: 15px; border: 1px solid #e2e8f0; }
-        .progress-inner { background: var(--fcapt-primary); height: 100%; width: 0%; transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); }
-        .risk { color: var(--danger); font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; display: block; }
-        select, .btn-checkin { width: 100%; padding: 14px; margin-top: 10px; border-radius: 8px; border: 1.5px solid #e2e8f0; font-size: 1rem; font-family: inherit; }
-        .btn-checkin { background: var(--fcapt-primary); color: white; border: none; font-weight: 700; cursor: pointer; transition: filter 0.2s; }
-        .btn-checkin:hover { filter: brightness(1.2); }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .course-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #f1f5f9; }
+        .progress-bar { background: #f1f5f9; border-radius: 99px; height: 10px; width: 140px; overflow: hidden; margin-left: 10px; }
+        .progress-inner { background: var(--fcapt-primary); height: 100%; transition: width 0.8s; }
+        select, .btn-mark { width: 100%; padding: 14px; margin-top: 10px; border-radius: 8px; border: 1px solid #ddd; }
+        .btn-mark { background: var(--fcapt-primary); color: white; border: none; font-weight: 700; cursor: pointer; }
     </style>
 </head>
 <body>
     <header class="header">
         <div>
-            <h2 style="margin:0; font-size: 1.3rem;" id="user-name">...</h2>
-            <small id="week-text" style="opacity: 0.9;">Week --</small>
+            <h2 id="user-name" style="margin:0">...</h2>
+            <small id="profile-info" style="opacity:0.9;">...</small>
         </div>
-        <button onclick="logout()" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.3); color:white; padding:8px 16px; cursor:pointer; border-radius:6px; font-weight: 600;">Logout</button>
+        <button onclick="logout()" style="background:none; border:1px solid white; color:white; padding:5px 10px; cursor:pointer; border-radius:4px;">Logout</button>
     </header>
-
     <main class="container">
         <div class="card">
-            <h3 style="margin-top:0; color: var(--fcapt-primary);">My Attendance Summary</h3>
-            <div id="attendance-list">Loading Courses...</div>
+            <h3 style="margin-top:0; color:var(--fcapt-primary);">My Attendance</h3>
+            <div id="attendance-list">Loading...</div>
         </div>
         <div class="card">
-            <h3 style="margin-top:0; color: var(--fcapt-primary);">Mark Attendance</h3>
+            <h3>Daily Check-in</h3>
             <select id="course-select"><option value="">-- Choose Course --</option></select>
-            <button class="btn-checkin" onclick="markAtt()">Verify Check-In</button>
+            <button class="btn-mark" onclick="markAtt()">Mark Presence</button>
         </div>
     </main>
-
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         const SB_URL = 'https://loblicverqcijkqatvhs.supabase.co';
         const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvYmxpY3ZlcnFjaWprcWF0dmhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMTAyOTYsImV4cCI6MjA5MTY4NjI5Nn0.vV-rpPzniYgSTzBStfikL_SJc722-41ezkiJnI4nOPs';
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
         const user = JSON.parse(localStorage.getItem('fcapt_user'));
-
-        let currentWeek = 1;
-        let totalWeeks = 12;
+        let currentWeek = 1; let totalWeeks = 12;
 
         async function init() {
             if (!user) window.location.href = 'index.html';
             document.getElementById('user-name').innerText = user.full_name;
+            document.getElementById('profile-info').innerText = `${user.program} • ${user.student_class}`;
 
             const { data: settings } = await supabaseClient.from('settings').select('*').single();
             const start = new Date(settings.resumption_date);
             const end = new Date(settings.semester_end_date);
             totalWeeks = Math.ceil((end - start) / (7 * 24 * 60 * 60 * 1000));
             currentWeek = Math.max(1, Math.ceil((new Date() - start) / (7 * 24 * 60 * 60 * 1000)));
-            document.getElementById('week-text').innerText = `Current Academic Week: ${currentWeek} of ${totalWeeks}`;
 
-            loadData();
-        }
-
-        async function loadData() {
             const { data: courses } = await supabaseClient.from('courses').select('*');
             const { data: att } = await supabaseClient.from('attendance').select('course_id').eq('student_id', user.id);
             
             const list = document.getElementById('attendance-list');
             const sel = document.getElementById('course-select');
             list.innerHTML = '';
-            sel.innerHTML = '<option value="">-- Choose Course --</option>';
-
             courses.forEach(c => {
                 const count = att.filter(a => a.course_id === c.id).length;
                 const p = Math.round((count / totalWeeks) * 100);
-                list.innerHTML += `
-                    <div class="course-item">
-                        <div>
-                            <strong>${c.course_code}</strong><br>
-                            ${p < 75 && currentWeek >= 9 ? '<span class="risk">Attendance Shortfall</span>' : ''}
-                        </div>
-                        <div style="display:flex; align-items:center;">
-                            <span style="font-weight:700;">${p}%</span>
-                            <div class="progress-bar"><div class="progress-inner" style="width:${p}%"></div></div>
-                        </div>
-                    </div>`;
-                sel.innerHTML += `<option value="${c.id}">${c.course_code}: ${c.course_title}</option>`;
+                list.innerHTML += `<div class="course-item">
+                    <div><strong>${c.course_code}</strong><br>${p < 75 && currentWeek >= 9 ? '<span style="color:red; font-size:0.7rem;">SHORTFALL</span>' : ''}</div>
+                    <div style="display:flex; align-items:center;"><span>${p}%</span><div class="progress-bar"><div class="progress-inner" style="width:${p}%"></div></div></div>
+                </div>`;
+                sel.innerHTML += `<option value="${c.id}">${c.course_code}</option>`;
             });
         }
-
         async function markAtt() {
             const cid = document.getElementById('course-select').value;
-            if(!cid) return alert("Select course");
             const { error } = await supabaseClient.from('attendance').insert([{ student_id: user.id, course_id: cid, week_number: currentWeek }]);
-            if(!error) { alert("Attendance Recorded."); loadData(); }
+            if(!error) { alert("Check-in recorded."); location.reload(); }
         }
-
         function logout() { localStorage.clear(); window.location.href = 'index.html'; }
         init();
     </script>
