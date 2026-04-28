@@ -3,102 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FCAPT Cloud Attendance Portal</title>
+    <title>FCAPT Portal - Login</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    
     <style>
-        :root {
-            --fcapt-green: #2d5a27;
-            --accent-gold: #c5a059;
-            --white: #ffffff;
-            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f4f7f6;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-
-        /* Header with Logo and Title */
-        .main-header {
-            background-color: var(--fcapt-green);
-            color: var(--white);
-            padding: 1rem 2rem;
-            border-bottom: 4px solid var(--accent-gold);
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .header-logo {
-            height: 50px;
-            background: white;
-            padding: 5px;
-            border-radius: 4px;
-        }
-
-        /* Login Card */
-        .container {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .login-card {
-            background: var(--white);
-            padding: 2.5rem;
-            border-radius: 12px;
-            box-shadow: var(--shadow);
-            width: 100%;
-            max-width: 400px;
-            border-top: 5px solid var(--fcapt-green);
-        }
-
+        :root { --fcapt-green: #2d5a27; --accent-gold: #c5a059; --white: #ffffff; }
+        body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; margin: 0; display: flex; flex-direction: column; min-height: 100vh; }
+        .main-header { background-color: var(--fcapt-green); color: var(--white); padding: 1rem 2rem; border-bottom: 4px solid var(--accent-gold); display: flex; align-items: center; gap: 15px; }
+        .container { flex: 1; display: flex; justify-content: center; align-items: center; padding: 20px; }
+        .login-card { background: var(--white); padding: 2.5rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 400px; border-top: 5px solid var(--fcapt-green); }
         .input-group { margin-top: 1.2rem; }
-        
-        label { 
-            display: block; 
-            margin-bottom: 5px; 
-            font-weight: 600; 
-            font-size: 0.9rem; 
-        }
-
-        input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-        }
-
-        .btn-primary {
-            width: 100%;
-            background-color: var(--fcapt-green);
-            color: white;
-            padding: 14px;
-            border: none;
-            border-radius: 6px;
-            margin-top: 2rem;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        /* Toast Popup */
-        #toast {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #333;
-            color: white;
-            padding: 15px 25px;
-            border-radius: 8px;
-            display: none;
-            z-index: 1000;
-        }
+        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem; }
+        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        .btn-primary { width: 100%; background-color: var(--fcapt-green); color: white; padding: 14px; border: none; border-radius: 6px; margin-top: 2rem; font-weight: 600; cursor: pointer; }
+        #toast { position: fixed; top: 20px; right: 20px; background: #333; color: white; padding: 15px 25px; border-radius: 8px; display: none; z-index: 1000; border-left: 5px solid var(--accent-gold); }
     </style>
 </head>
 <body>
@@ -106,15 +23,12 @@
     <div id="toast"></div>
 
     <header class="main-header">
-        <img src="fcapt-logo.png" alt="FCAPT" class="header-logo" onerror="this.style.display='none'">
-        <h1 style="font-size: 1.3rem; margin: 0;">FCAPT Cloud Attendance Portal</h1>
+        <h1 style="font-size: 1.3rem; margin: 0;">FCAPT Cloud Attendance</h1>
     </header>
 
     <main class="container">
         <div class="login-card">
-            <h2 style="color: var(--fcapt-green); margin-top: 0;">Portal Login</h2>
-            <p style="color: #666; font-size: 0.85rem;">Enter your institutional credentials to continue.</p>
-            
+            <h2 style="color: var(--fcapt-green); margin: 0 0 10px 0;">Portal Login</h2>
             <form id="loginForm">
                 <div class="input-group">
                     <label>Registration Number / Staff ID</label>
@@ -130,48 +44,44 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <script>
-        // Use your SAUDIA project details
         const SB_URL = 'https://loblicverqcijkqatvhs.supabase.co';
         const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvYmxpY3ZlcnFjaWprcWF0dmhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMTAyOTYsImV4cCI6MjA5MTY4NjI5Nn0.vV-rpPzniYgSTzBStfikL_SJc722-41ezkiJnI4nOPs';
-        
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('loginBtn');
-            const reg = document.getElementById('reg_num').value;
+            const reg = document.getElementById('reg_num').value.trim();
             const pass = document.getElementById('password').value;
 
             btn.innerText = 'Verifying...';
-            
-            // Look up the person in the 'profiles' table
-            const { data, error } = await supabaseClient
-                .from('profiles')
-                .select('*')
-                .eq('reg_num', reg)
-                .single();
+            btn.disabled = true;
 
-            if (error || !data) {
-                showToast("Account not found.");
-            } else if (data.password !== pass) {
-                showToast("Incorrect password.");
-            } else {
-                showToast(`Success! Welcome ${data.full_name}`);
-                // Save user info in browser memory for the next page
-                localStorage.setItem('fcapt_user', JSON.stringify(data));
-                
-                // Redirect based on role
-                setTimeout(() => {
-                    if (data.role === 'lecturer') {
-                        window.location.href = 'lecturer_dashboard.html';
-                    } else {
-                        window.location.href = 'student_portal.html';
-                    }
-                }, 1000);
+            try {
+                const { data, error } = await supabaseClient
+                    .from('profiles')
+                    .select('*')
+                    .eq('reg_num', reg)
+                    .single();
+
+                if (error || !data) {
+                    showToast("Account not found.");
+                } else if (data.password !== pass) {
+                    showToast("Incorrect password.");
+                } else {
+                    showToast(`Welcome ${data.full_name}`);
+                    localStorage.setItem('fcapt_user', JSON.stringify(data));
+                    setTimeout(() => {
+                        window.location.href = data.role === 'lecturer' ? 'lecturer_dashboard.html' : 'student_portal.html';
+                    }, 1000);
+                }
+            } catch (err) {
+                showToast("Connection error.");
+            } finally {
+                btn.innerText = 'Sign In';
+                btn.disabled = false;
             }
-            btn.innerText = 'Sign In';
         });
 
         function showToast(msg) {
