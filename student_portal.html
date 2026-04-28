@@ -12,7 +12,7 @@
         .container { max-width: 600px; margin: 2rem auto; padding: 0 20px; }
         .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .progress-bg { background: #eee; border-radius: 20px; height: 20px; width: 100%; margin: 10px 0; overflow: hidden; }
-        #progress-bar { background: var(--fcapt-green); height: 100%; width: 0%; transition: width 0.8s; }
+        #progress-bar { background: var(--fcapt-green); height: 0%; width: 0%; transition: width 0.8s; }
         #warning-box { display: none; background: #ffebee; border-left: 5px solid var(--danger); color: var(--danger); padding: 15px; margin-bottom: 20px; font-weight: 600; }
         .btn-checkin { width: 100%; padding: 15px; background: var(--fcapt-green); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
         .btn-checkin:disabled { background: #ccc; }
@@ -43,23 +43,51 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <script>
+        // Use your specific project credentials
         const SB_URL = 'https://loblicverqcijkqatvhs.supabase.co';
         const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvYmxpY3ZlcnFjaWprcWF0dmhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMTAyOTYsImV4cCI6MjA5MTY4NjI5Nn0.vV-rpPzniYgSTzBStfikL_SJc722-41ezkiJnI4nOPs';
+        
+        // RENAMED TO supabaseClient TO AVOID CONFLICT
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
         const user = JSON.parse(localStorage.getItem('fcapt_user'));
-        if (!user) window.location.href = 'index.html';
 
-        document.getElementById('user-name').innerText = user.full_name;
-        document.getElementById('user-reg').innerText = user.reg_num;
+        // Load data immediately if user is valid
+        if (!user) {
+            window.location.href = 'index.html';
+        } else {
+            document.getElementById('user-name').innerText = user.full_name;
+            document.getElementById('user-reg').innerText = user.reg_num;
+            loadStats();
+        }
+
+        // Global functions defined early so buttons can find them
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
 
         async function loadStats() {
-            const { count } = await supabaseClient.from('attendance').select('*', { count: 'exact' }).eq('student_id', user.id);
-            const percentage = Math.round(((count || 0) / 12) * 100);
-            document.getElementById('percent-text').innerText = percentage + "%";
-            document.getElementById('progress-bar').style.width = percentage + "%";
-            if (percentage < 75) document.getElementById('warning-box').style.display = 'block';
+            try {
+                const { count, error } = await supabaseClient
+                    .from('attendance')
+                    .select('*', { count: 'exact' })
+                    .eq('student_id', user.id);
+
+                if (error) throw error;
+
+                const percentage = Math.round(((count || 0) / 12) * 100);
+                document.getElementById('percent-text').innerText = percentage + "%";
+                document.getElementById('progress-bar').style.width = percentage + "%";
+
+                if (percentage < 75) {
+                    document.getElementById('warning-box').style.display = 'block';
+                }
+            } catch (err) {
+                console.error("Stats Error:", err.message);
+            }
         }
 
         async function markAttendance() {
@@ -67,20 +95,22 @@
             btn.disabled = true;
             btn.innerText = "Processing...";
 
-            const { error } = await supabaseClient.from('attendance').insert([{ student_id: user.id, week_number: 9 }]);
+            try {
+                const { error } = await supabaseClient
+                    .from('attendance')
+                    .insert([{ student_id: user.id, week_number: 9 }]);
 
-            if (error) {
-                alert("Error: " + error.message);
-                btn.disabled = false;
-            } else {
+                if (error) throw error;
+
                 alert("Attendance Marked!");
                 btn.innerText = "Completed";
                 loadStats();
+            } catch (err) {
+                alert("Error: " + err.message);
+                btn.disabled = false;
+                btn.innerText = "Mark Attendance (Week 9)";
             }
         }
-
-        function logout() { localStorage.clear(); window.location.href = 'index.html'; }
-        loadStats();
     </script>
 </body>
 </html>
