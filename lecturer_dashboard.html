@@ -3,198 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lecturer Dashboard | FCAPT</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root { --fcapt-primary: #1e4620; --fcapt-bg: #f8fafc; --danger: #be123c; --success: #15803d; }
-        body { font-family: 'Inter', sans-serif; background: var(--fcapt-bg); margin: 0; color: #1e293b; }
-        
-        .header { background: var(--fcapt-primary); color: white; padding: 1.2rem 2rem; display: flex; justify-content: space-between; align-items: center; }
-        .btn-logout { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 16px; cursor: pointer; border-radius: 6px; font-weight: 600; }
-
-        .container { max-width: 1100px; margin: 2rem auto; padding: 0 20px; }
-        
-        /* Filter Bar Styling */
-        .filter-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; border: 1px solid #e2e8f0; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end; }
-        .filter-group { display: flex; flex-direction: column; gap: 5px; }
-        .filter-group label { font-size: 0.8rem; font-weight: 700; color: #64748b; text-transform: uppercase; }
-        select { padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; font-family: inherit; }
-
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { text-align: left; padding: 14px; border-bottom: 1px solid #f1f5f9; }
-        th { background: #f8fafc; color: #64748b; font-size: 0.75rem; text-transform: uppercase; font-weight: 600; }
-        
-        .badge { padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 700; }
-        .badge.danger { background: #fff1f2; color: var(--danger); }
-        .badge.success { background: #f0fdf4; color: var(--success); }
-    </style>
+    <title>Lecturer Portal | FCAPT</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <header class="header">
-        <div>
-            <h2 id="lec-name" style="margin:0">...</h2>
-            <small id="week-info" style="opacity: 0.9;">...</small>
-        </div>
-        <button class="btn-logout" onclick="logout()">Logout</button>
+    <header style="background: var(--fcapt-primary); color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center;">
+        <h2 id="lec-title" style="margin:0">Lecturer Dashboard</h2>
+        <button class="btn" onclick="logout()" style="background:rgba(255,255,255,0.2);">Logout</button>
     </header>
 
     <main class="container">
-        <div class="filter-card">
-            <div class="filter-group">
-                <label>Filter by Course</label>
-                <select id="filter-course" onchange="applyFilters()">
-                    <option value="all">All My Courses</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label>Filter by Program</label>
-                <select id="filter-program" onchange="applyFilters()">
-                    <option value="all">All Programs</option>
-                    <option value="AEM">AEM</option>
-                    <option value="AHP">AHP</option>
-                    <option value="CEM">CEM</option>
-                    <option value="CPS">CPS</option>
-                    <option value="NCC">NCC</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label>Filter by Class (Year)</label>
-                <select id="filter-class" onchange="applyFilters()">
-                    <option value="all">All Classes</option>
-                    <option value="ND I">ND I</option>
-                    <option value="ND II">ND II</option>
-                    <option value="Pre-HND">Pre-HND</option>
-                    <option value="HND I">HND I</option>
-                    <option value="HND II">HND II</option>
-                </select>
-            </div>
+        <div class="card" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+            <div><label>Course</label><select id="f-course" onchange="filter()"><option value="all">All Courses</option></select></div>
+            <div><label>Program</label><select id="f-prog" onchange="filter()"><option value="all">All Programs</option><option value="CPS">CPS</option><option value="AEM">AEM</option></select></div>
+            <div><label>Class</label><select id="f-class" onchange="filter()"><option value="all">All Years</option><option value="ND I">ND I</option><option value="ND II">ND II</option></select></div>
         </div>
 
-        <div class="card">
-            <h3 style="margin-top:0; color: var(--fcapt-primary);">Attendance Report</h3>
-            <table id="report-table">
-                <thead>
-                    <tr>
-                        <th>Student Details</th>
-                        <th>Program/Class</th>
-                        <th>Course</th>
-                        <th>Attendance</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody id="report-body">
-                    <tr><td colspan="5" style="text-align:center; padding:40px; color:#94a3b8;">Loading academic data...</td></tr>
-                </tbody>
+        <div class="card table-container">
+            <table id="report">
+                <thead><tr><th>Student</th><th>Program/Class</th><th>Course</th><th>Attendance</th><th>Status</th></tr></thead>
+                <tbody></tbody>
             </table>
         </div>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="main.js"></script>
     <script>
         const SB_URL = 'https://loblicverqcijkqatvhs.supabase.co';
         const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvYmxpY3ZlcnFjaWprcWF0dmhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMTAyOTYsImV4cCI6MjA5MTY4NjI5Nn0.vV-rpPzniYgSTzBStfikL_SJc722-41ezkiJnI4nOPs';
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
         const user = JSON.parse(localStorage.getItem('fcapt_user'));
-
-        let masterData = []; // Store raw data for instant filtering
-        let totalWeeks = 12;
+        let master = [];
 
         async function init() {
-            if (!user) { window.location.href = 'index.html'; return; }
-            document.getElementById('lec-name').innerText = "Lec. " + user.full_name;
-
-            // 1. Fetch System Settings for total weeks
-            const { data: settings } = await supabaseClient.from('settings').select('*').single();
-            const start = new Date(settings.resumption_date);
-            const end = new Date(settings.semester_end_date);
-            totalWeeks = Math.ceil((end - start) / (7 * 24 * 60 * 60 * 1000));
-            document.getElementById('week-info').innerText = `Semester Duration: ${totalWeeks} Weeks`;
-
-            // 2. Fetch Lecturer's Courses and populate dropdown
+            document.getElementById('lec-title').innerText = "Lec. " + user.full_name;
             const { data: myCourses } = await supabaseClient.from('courses').select('*').eq('lecturer_id', user.id);
-            const courseFilter = document.getElementById('filter-course');
-            myCourses.forEach(c => {
-                courseFilter.innerHTML += `<option value="${c.id}">${c.course_code}</option>`;
-            });
-
-            // 3. Fetch All Students and Attendance
+            const { data: att } = await supabaseClient.from('attendance').select('*');
             const { data: students } = await supabaseClient.from('profiles').select('*').eq('role', 'student');
-            const { data: att } = await supabaseClient.from('attendance').select('*').in('course_id', myCourses.map(c => c.id));
-
-            // 4. Map into Master Data for easy filtering
-            students.forEach(s => {
-                myCourses.forEach(c => {
-                    const count = att ? att.filter(a => a.student_id === s.id && a.course_id === c.id).length : 0;
-                    if (count > 0) {
-                        const p = Math.round((count / totalWeeks) * 100);
-                        masterData.push({
-                            student_name: s.full_name,
-                            reg_num: s.reg_num,
-                            program: s.program,
-                            student_class: s.student_class,
-                            course_id: c.id,
-                            course_code: c.course_code,
-                            count: count,
-                            percentage: p
-                        });
-                    }
+            
+            const csel = document.getElementById('f-course');
+            myCourses.forEach(c => {
+                csel.innerHTML += `<option value="${c.id}">${c.course_code}</option>`;
+                students.forEach(s => {
+                    const count = att.filter(a => a.student_id === s.id && a.course_id === c.id).length;
+                    if(count > 0) master.push({ s, c, count, p: Math.round((count/12)*100) });
                 });
             });
-
-            renderTable(masterData);
+            filter();
         }
 
-        function applyFilters() {
-            const courseVal = document.getElementById('filter-course').value;
-            const progVal = document.getElementById('filter-program').value;
-            const classVal = document.getElementById('filter-class').value;
-
-            const filtered = masterData.filter(row => {
-                const matchCourse = (courseVal === 'all' || row.course_id == courseVal);
-                const matchProg = (progVal === 'all' || row.program === progVal);
-                const matchClass = (classVal === 'all' || row.student_class === classVal);
-                return matchCourse && matchProg && matchClass;
-            });
-
-            renderTable(filtered);
-        }
-
-        function renderTable(data) {
-            const tbody = document.getElementById('report-body');
+        function filter() {
+            const c = document.getElementById('f-course').value;
+            const p = document.getElementById('f-prog').value;
+            const cl = document.getElementById('f-class').value;
+            const filtered = master.filter(m => (c === 'all' || m.c.id == c) && (p === 'all' || m.s.program === p) && (cl === 'all' || m.s.student_class === cl));
+            
+            const tbody = document.querySelector('#report tbody');
             tbody.innerHTML = '';
-
-            if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:40px;">No records found matching these filters.</td></tr>';
-                return;
-            }
-
-            data.forEach(row => {
-                const statusClass = row.percentage < 75 ? 'danger' : 'success';
-                const statusText = row.percentage < 75 ? 'Shortfall' : 'Eligible';
-
-                tbody.innerHTML += `
-                    <tr>
-                        <td>
-                            <div style="font-weight:600;">${row.student_name}</div>
-                            <div style="font-size:0.8rem; color:#64748b;">${row.reg_num}</div>
-                        </td>
-                        <td>
-                            <div style="font-weight:600;">${row.program}</div>
-                            <div style="font-size:0.8rem; color:#64748b;">${row.student_class}</div>
-                        </td>
-                        <td><span style="color:var(--fcapt-primary); font-weight:700;">${row.course_code}</span></td>
-                        <td>
-                            <span style="font-weight:700;">${row.percentage}%</span>
-                            <div style="font-size:0.75rem; color:#94a3b8;">${row.count} / ${totalWeeks} lectures</div>
-                        </td>
-                        <td><span class="badge ${statusClass}">${statusText}</span></td>
-                    </tr>`;
+            filtered.forEach(m => {
+                tbody.innerHTML += `<tr><td>${m.s.full_name}</td><td>${m.s.program} ${m.s.student_class}</td><td>${m.c.course_code}</td><td>${m.p}%</td><td>${m.p < 75 ? '❌ Short' : '✅ OK'}</td></tr>`;
             });
         }
-
-        function logout() { localStorage.clear(); window.location.href = 'index.html'; }
         init();
     </script>
 </body>
