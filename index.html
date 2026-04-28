@@ -3,78 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FCAPT Portal - Login & Admin</title>
+    <title>FCAPT Portal | Login</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --fcapt-green: #2d5a27; --accent-gold: #c5a059; --white: #ffffff; }
-        body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; margin: 0; }
-        .main-header { background-color: var(--fcapt-green); color: var(--white); padding: 1rem 2rem; border-bottom: 4px solid var(--accent-gold); }
-        .container { display: flex; flex-direction: column; align-items: center; padding: 40px 20px; min-height: 80vh; }
-        
-        .card { background: var(--white); padding: 2.5rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 400px; border-top: 5px solid var(--fcapt-green); margin-bottom: 20px; }
-        
-        /* Specific Admin Styling to make it stand out */
-        #admin-panel { 
-            display: none; 
-            border-top: 5px solid var(--accent-gold); 
-            background: #fffdf9;
-        }
-
+        :root { --fcapt-green: #2d5a27; --accent-gold: #c5a059; }
+        body { font-family: 'Inter', sans-serif; background: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: white; padding: 2.5rem; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 380px; border-top: 5px solid var(--fcapt-green); }
         .input-group { margin-top: 1.2rem; }
         label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem; }
-        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
-        
-        .btn-primary { width: 100%; background-color: var(--fcapt-green); color: white; padding: 14px; border: none; border-radius: 6px; margin-top: 1.5rem; font-weight: 600; cursor: pointer; }
-        .btn-admin { background-color: var(--accent-gold); }
-        
-        #toast { position: fixed; top: 20px; right: 20px; background: #333; color: white; padding: 15px 25px; border-radius: 8px; display: none; z-index: 1000; border-left: 5px solid var(--accent-gold); }
+        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        .btn { width: 100%; background: var(--fcapt-green); color: white; padding: 14px; border: none; border-radius: 6px; margin-top: 1.5rem; font-weight: 700; cursor: pointer; }
     </style>
 </head>
 <body>
-
-    <div id="toast"></div>
-
-    <header class="main-header">
-        <h1 style="font-size: 1.3rem; margin: 0;">FCAPT Cloud Attendance</h1>
-    </header>
-
-    <main class="container">
-        <div class="card" id="login-card">
-            <h2 style="color: var(--fcapt-green); margin: 0 0 10px 0;">Portal Login</h2>
-            <form id="loginForm">
-                <div class="input-group">
-                    <label>Registration Number / Staff ID</label>
-                    <input type="text" id="reg_num" placeholder="Enter ID" required>
-                </div>
-                <div class="input-group">
-                    <label>Password</label>
-                    <input type="password" id="password" required>
-                </div>
-                <button type="submit" id="loginBtn" class="btn-primary">Sign In</button>
-            </form>
-        </div>
-
-        <div class="card" id="admin-panel">
-            <h2 style="color: var(--accent-gold); margin: 0 0 10px 0;">System Configuration</h2>
-            <p style="font-size: 0.85rem; color: #666; margin-bottom: 20px;">Welcome, Dr. Ezekiel Olowo. Please set the semester boundaries below.</p>
-            
+    <div class="card">
+        <h2 style="color: var(--fcapt-green); margin-top: 0;">FCAPT Portal</h2>
+        <form id="loginForm">
             <div class="input-group">
-                <label>Resumption Date</label>
-                <input type="date" id="resumption_date">
+                <label>ID Number</label>
+                <input type="text" id="reg_num" required>
             </div>
             <div class="input-group">
-                <label>End of Semester</label>
-                <input type="date" id="end_date">
+                <label>Password</label>
+                <input type="password" id="password" required>
             </div>
-            
-            <button onclick="updateDates()" id="saveBtn" class="btn-primary btn-admin">Save Global Schedule</button>
-            
-            <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
-            
-            <button onclick="goToLecturerDashboard()" style="width:100%; padding:10px; background:#eee; border:none; border-radius:6px; cursor:pointer;">Go to My Lecturer Dashboard</button>
-            <button onclick="location.reload()" style="background:none; border:none; color:#999; width:100%; margin-top:15px; cursor:pointer;">Logout</button>
-        </div>
-    </main>
+            <button type="submit" class="btn" id="loginBtn">Sign In</button>
+        </form>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
@@ -86,71 +41,24 @@
             e.preventDefault();
             const reg = document.getElementById('reg_num').value.trim();
             const pass = document.getElementById('password').value;
-            const btn = document.getElementById('loginBtn');
-
-            btn.innerText = 'Verifying...';
 
             const { data, error } = await supabaseClient.from('profiles').select('*').eq('reg_num', reg).single();
 
             if (error || !data || data.password !== pass) {
-                showToast("Login Failed.");
-                btn.innerText = 'Sign In';
+                alert("Invalid Credentials");
             } else {
                 localStorage.setItem('fcapt_user', JSON.stringify(data));
                 
-                // Flexible name check for Dr. Ezekiel Olowo
-                const isAdmin = data.full_name.toLowerCase().includes("ezekiel") || data.full_name.toLowerCase().includes("olowo");
-
-                if (isAdmin) {
-                    showToast("Admin Identity Verified");
-                    document.getElementById('login-card').style.display = 'none';
-                    document.getElementById('admin-panel').style.display = 'block';
-                    loadCurrentDates();
+                // Redirect based on ROLE, not name
+                if (data.role === 'admin') {
+                    window.location.href = 'admin_dashboard.html';
+                } else if (data.role === 'lecturer') {
+                    window.location.href = 'lecturer_dashboard.html';
                 } else {
-                    window.location.href = data.role === 'lecturer' ? 'lecturer_dashboard.html' : 'student_portal.html';
+                    window.location.href = 'student_portal.html';
                 }
             }
         });
-
-        async function loadCurrentDates() {
-            const { data } = await supabaseClient.from('settings').select('*').eq('id', 1).single();
-            if (data) {
-                document.getElementById('resumption_date').value = data.resumption_date;
-                document.getElementById('end_date').value = data.semester_end_date;
-            }
-        }
-
-        async function updateDates() {
-            const start = document.getElementById('resumption_date').value;
-            const end = document.getElementById('end_date').value;
-            const btn = document.getElementById('saveBtn');
-
-            if (!start || !end) return showToast("Set both dates!");
-
-            btn.innerText = "Updating Database...";
-            const { error } = await supabaseClient.from('settings').update({ 
-                resumption_date: start, 
-                semester_end_date: end 
-            }).eq('id', 1);
-
-            if (!error) {
-                showToast("Dates saved successfully!");
-                btn.innerText = "Save Global Schedule";
-            } else {
-                showToast("Error saving dates.");
-            }
-        }
-
-        function goToLecturerDashboard() {
-            window.location.href = 'lecturer_dashboard.html';
-        }
-
-        function showToast(msg) {
-            const t = document.getElementById('toast');
-            t.innerText = msg;
-            t.style.display = 'block';
-            setTimeout(() => { t.style.display = 'none'; }, 3000);
-        }
     </script>
 </body>
 </html>
