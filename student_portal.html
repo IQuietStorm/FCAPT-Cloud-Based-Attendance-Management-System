@@ -10,160 +10,102 @@
         body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; margin: 0; }
         .header { background: var(--fcapt-green); color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--accent-gold); }
         .container { max-width: 600px; margin: 2rem auto; padding: 0 20px; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .progress-bg { background: #eee; border-radius: 20px; height: 20px; width: 100%; margin: 10px 0; overflow: hidden; }
-        #progress-bar { background: var(--fcapt-green); height: 0%; width: 0%; transition: width 0.8s; }
-        #warning-box { display: none; background: #ffebee; border-left: 5px solid var(--danger); color: var(--danger); padding: 15px; margin-bottom: 20px; font-weight: 600; }
-        .btn-checkin { width: 100%; padding: 15px; background: var(--fcapt-green); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
-        .btn-checkin:disabled { background: #ccc; }
+        #progress-bar { background: var(--fcapt-green); height: 100%; width: 0%; transition: width 0.8s; }
+        #warning-box { display: none; background: #ffebee; border-left: 5px solid var(--danger); color: var(--danger); padding: 15px; margin-bottom: 20px; font-weight: 600; border-radius: 4px; }
+        .btn-checkin { width: 100%; padding: 15px; background: var(--fcapt-green); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 1rem; }
+        .btn-checkin:disabled { background: #ccc; cursor: not-allowed; }
+        select { width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #ddd; margin-bottom: 20px; font-size: 1rem; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #444; }
     </style>
 </head>
 <body>
 
     <header class="header">
         <div>
-            <h2 style="margin:0" id="user-name">Student</h2>
+            <h2 style="margin:0" id="user-name">Loading...</h2>
             <small id="user-reg">ID Number</small>
         </div>
-        <button style="background:none; border:1px solid white; color:white; padding:5px 10px; cursor:pointer;" onclick="logout()">Logout</button>
+        <button style="background:none; border:1px solid white; color:white; padding:5px 15px; cursor:pointer; border-radius:4px;" onclick="logout()">Logout</button>
     </header>
 
     <main class="container">
         <div id="warning-box">⚠️ WEEK 9 WARNING: Attendance is below 75%. Eligibility at risk.</div>
 
         <div class="card">
-            <h3>Your Attendance</h3>
-            <p>Percentage: <span id="percent-text">0%</span></p>
+            <h3>Attendance Status</h3>
+            <p>Overall Percentage: <span id="percent-text">0%</span></p>
             <div class="progress-bg"><div id="progress-bar"></div></div>
         </div>
 
-        <div class="card" style="text-align: center;">
-    <h3>Mark Attendance</h3>
-    <div style="margin-bottom: 15px;">
-        <label style="display:block; margin-bottom:5px;">Select Course:</label>
-        <select id="course-select" style="width:100%; padding:10px; border-radius:5px;">
-            <option value="">Loading courses...</option>
-        </select>
-    </div>
-    <button id="checkin-btn" class="btn-checkin" onclick="markAttendance()">Confirm Check-In</button>
-</div>
-
-<script>
-// Add this inside your existing <script> after loadStats()
-async function fetchCourses() {
-    const { data, error } = await supabaseClient.from('courses').select('id, course_code, course_title');
-    const select = document.getElementById('course-select');
-    
-    if (data) {
-        select.innerHTML = '<option value="">-- Choose Course --</option>';
-        data.forEach(course => {
-            select.innerHTML += `<option value="${course.id}">${course.course_code}: ${course.course_title}</option>`;
-        });
-    }
-}
-
-// Update your markAttendance function to use the selected value
-async function markAttendance() {
-    const courseId = document.getElementById('course-select').value;
-    if (!courseId) {
-        alert("Please select a course first!");
-        return;
-    }
-
-    const btn = document.getElementById('checkin-btn');
-    btn.disabled = true;
-    
-    const { error } = await supabaseClient
-        .from('attendance')
-        .insert([{ 
-            student_id: user.id, 
-            course_id: courseId, // Dynamic ID from dropdown
-            week_number: 9 
-        }]);
-
-    if (error) {
-        alert("Error: " + error.message);
-        btn.disabled = false;
-    } else {
-        alert("Attendance Marked!");
-        loadStats();
-    }
-}
-
-// Call fetchCourses() when page loads
-fetchCourses();
-</script>
+        <div class="card">
+            <h3>Mark Attendance</h3>
+            <label for="course-select">Select Your Current Course:</label>
+            <select id="course-select">
+                <option value="">Loading courses...</option>
+            </select>
+            <button id="checkin-btn" class="btn-checkin" onclick="markAttendance()">Submit Attendance</button>
+        </div>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <script>
-        // Use your specific project credentials
         const SB_URL = 'https://loblicverqcijkqatvhs.supabase.co';
         const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvYmxpY3ZlcnFjaWprcWF0dmhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMTAyOTYsImV4cCI6MjA5MTY4NjI5Nn0.vV-rpPzniYgSTzBStfikL_SJc722-41ezkiJnI4nOPs';
-        
-        // RENAMED TO supabaseClient TO AVOID CONFLICT
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
         const user = JSON.parse(localStorage.getItem('fcapt_user'));
-
-        // Load data immediately if user is valid
         if (!user) {
             window.location.href = 'index.html';
         } else {
             document.getElementById('user-name').innerText = user.full_name;
             document.getElementById('user-reg').innerText = user.reg_num;
             loadStats();
+            fetchCourses();
         }
 
-        // Global functions defined early so buttons can find them
-        function logout() {
-            localStorage.clear();
-            window.location.href = 'index.html';
-        }
-
-        async function loadStats() {
-            try {
-                const { count, error } = await supabaseClient
-                    .from('attendance')
-                    .select('*', { count: 'exact' })
-                    .eq('student_id', user.id);
-
-                if (error) throw error;
-
-                const percentage = Math.round(((count || 0) / 12) * 100);
-                document.getElementById('percent-text').innerText = percentage + "%";
-                document.getElementById('progress-bar').style.width = percentage + "%";
-
-                if (percentage < 75) {
-                    document.getElementById('warning-box').style.display = 'block';
-                }
-            } catch (err) {
-                console.error("Stats Error:", err.message);
+        async function fetchCourses() {
+            const { data, error } = await supabaseClient.from('courses').select('id, course_code, course_title');
+            const select = document.getElementById('course-select');
+            if (data) {
+                select.innerHTML = '<option value="">-- Select Course --</option>';
+                data.forEach(c => {
+                    select.innerHTML += `<option value="${c.id}">${c.course_code}: ${c.course_title}</option>`;
+                });
             }
         }
 
+        async function loadStats() {
+            const { count } = await supabaseClient.from('attendance').select('*', { count: 'exact' }).eq('student_id', user.id);
+            const percentage = Math.round(((count || 0) / 12) * 100);
+            document.getElementById('percent-text').innerText = percentage + "%";
+            document.getElementById('progress-bar').style.width = percentage + "%";
+            if (percentage < 75) document.getElementById('warning-box').style.display = 'block';
+        }
+
         async function markAttendance() {
+            const courseId = document.getElementById('course-select').value;
+            if(!courseId) return alert("Please select a course!");
+
             const btn = document.getElementById('checkin-btn');
             btn.disabled = true;
             btn.innerText = "Processing...";
 
-            try {
-                const { error } = await supabaseClient
-                    .from('attendance')
-                    .insert([{ student_id: user.id, week_number: 9 }]);
+            const { error } = await supabaseClient.from('attendance').insert([{ student_id: user.id, course_id: courseId, week_number: 9 }]);
 
-                if (error) throw error;
-
-                alert("Attendance Marked!");
-                btn.innerText = "Completed";
-                loadStats();
-            } catch (err) {
-                alert("Error: " + err.message);
+            if (error) {
+                alert("Error: " + error.message);
                 btn.disabled = false;
-                btn.innerText = "Mark Attendance (Week 9)";
+                btn.innerText = "Submit Attendance";
+            } else {
+                alert("Attendance Recorded Successfully!");
+                btn.innerText = "Checked-In";
+                loadStats();
             }
         }
+
+        function logout() { localStorage.clear(); window.location.href = 'index.html'; }
     </script>
 </body>
 </html>
