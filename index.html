@@ -4,46 +4,182 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FCAPT Cloud Attendance Portal</title>
-    <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --fcapt-green: #2d5a27;
+            --accent-gold: #c5a059;
+            --white: #ffffff;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Header with Logo and Title */
+        .main-header {
+            background-color: var(--fcapt-green);
+            color: var(--white);
+            padding: 1rem 2rem;
+            border-bottom: 4px solid var(--accent-gold);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-logo {
+            height: 50px;
+            background: white;
+            padding: 5px;
+            border-radius: 4px;
+        }
+
+        /* Login Card */
+        .container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-card {
+            background: var(--white);
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 400px;
+            border-top: 5px solid var(--fcapt-green);
+        }
+
+        .input-group { margin-top: 1.2rem; }
+        
+        label { 
+            display: block; 
+            margin-bottom: 5px; 
+            font-weight: 600; 
+            font-size: 0.9rem; 
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+
+        .btn-primary {
+            width: 100%;
+            background-color: var(--fcapt-green);
+            color: white;
+            padding: 14px;
+            border: none;
+            border-radius: 6px;
+            margin-top: 2rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Toast Popup */
+        #toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #333;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            display: none;
+            z-index: 1000;
+        }
+    </style>
 </head>
 <body>
 
+    <div id="toast"></div>
+
     <header class="main-header">
-        <div class="header-container">
-            <div class="logo-section">
-                <img src="fcapt-logo.png" alt="FCAPT Logo" class="header-logo">
-                <h1 class="header-title">FCAPT Cloud Attendance Portal</h1>
-            </div>
-            <nav class="header-nav">
-                <span class="status-indicator">● System Online</span>
-            </nav>
-        </div>
+        <img src="fcapt-logo.png" alt="FCAPT" class="header-logo" onerror="this.style.display='none'">
+        <h1 style="font-size: 1.3rem; margin: 0;">FCAPT Cloud Attendance Portal</h1>
     </header>
 
     <main class="container">
-        <section class="login-card">
-            <h2>Welcome Back</h2>
-            <p>Please enter your credentials to access the portal.</p>
+        <div class="login-card">
+            <h2 style="color: var(--fcapt-green); margin-top: 0;">Portal Login</h2>
+            <p style="color: #666; font-size: 0.85rem;">Enter your institutional credentials to continue.</p>
             
             <form id="loginForm">
                 <div class="input-group">
-                    <label for="reg_num">Registration Number / Email</label>
+                    <label>Registration Number / Staff ID</label>
                     <input type="text" id="reg_num" placeholder="e.g. FCAPT/HND/NCC/25/1140" required>
                 </div>
                 <div class="input-group">
-                    <label for="password">Password</label>
+                    <label>Password</label>
                     <input type="password" id="password" required>
                 </div>
-                <button type="submit" class="btn-primary">Login to Portal</button>
+                <button type="submit" id="loginBtn" class="btn-primary">Sign In</button>
             </form>
-        </section>
+        </div>
     </main>
 
-    <footer class="main-footer">
-        <p>&copy; 2026 Micah Bamidele | FCAPT Project Portfolio</p>
-    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    <script src="app.js"></script>
+    <script>
+        // Use your SAUDIA project details
+        const SB_URL = 'https://plztbuirvlxlbmbuscwf.supabase.co';
+        const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsenRidWlydmx4bGJtYnVzY3dmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0MjQ5OTMsImV4cCI6MjA5MjAwMDk5M30.ZJY5wVNo3SbPEgS5u5bsSZg1g8D96ak9AT0VTCm6gi8';
+        
+        const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('loginBtn');
+            const reg = document.getElementById('reg_num').value;
+            const pass = document.getElementById('password').value;
+
+            btn.innerText = 'Verifying...';
+            
+            // Look up the person in the 'profiles' table
+            const { data, error } = await supabaseClient
+                .from('profiles')
+                .select('*')
+                .eq('reg_num', reg)
+                .single();
+
+            if (error || !data) {
+                showToast("Account not found.");
+            } else if (data.password !== pass) {
+                showToast("Incorrect password.");
+            } else {
+                showToast(`Success! Welcome ${data.full_name}`);
+                // Save user info in browser memory for the next page
+                localStorage.setItem('fcapt_user', JSON.stringify(data));
+                
+                // Redirect based on role
+                setTimeout(() => {
+                    if (data.role === 'lecturer') {
+                        window.location.href = 'lecturer_dashboard.html';
+                    } else {
+                        window.location.href = 'student_portal.html';
+                    }
+                }, 1000);
+            }
+            btn.innerText = 'Sign In';
+        });
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.style.display = 'block';
+            setTimeout(() => { t.style.display = 'none'; }, 3000);
+        }
+    </script>
 </body>
 </html>
