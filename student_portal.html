@@ -3,80 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FCAPT | Student Portal</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>Cloud Attendance System - Student Portal</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root { --fcapt-primary: #1e4620; --fcapt-bg: #f8fafc; --card-bg: #ffffff; --text-main: #1e293b; --text-muted: #64748b; --border-color: #e2e8f0; }
-        [data-theme="dark"] { --fcapt-bg: #0f172a; --card-bg: #1e293b; --text-main: #f1f5f9; --border-color: #334155; }
-        body { font-family: 'Inter', sans-serif; background: var(--fcapt-bg); color: var(--text-main); margin: 0; padding-bottom: 80px; }
-        .header { background: var(--fcapt-primary); color: white; padding: 1.5rem; text-align: center; }
-        .logo-img { height: 50px; margin-bottom: 10px; filter: brightness(0) invert(1); }
-        .container { max-width: 500px; margin: 1.5rem auto; padding: 0 15px; }
-        .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
-        .user-badge { font-size: 0.85rem; background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 99px; display: inline-block; margin-top: 8px; }
-        select { width: 100%; padding: 14px; border-radius: 10px; border: 2px solid var(--border-color); background: var(--card-bg); color: var(--text-main); margin-bottom: 20px; }
-        .btn { width: 100%; background: var(--fcapt-primary); color: white; padding: 16px; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; }
-        .theme-toggle { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; border-radius: 50%; background: var(--fcapt-primary); color: white; border: none; cursor: pointer; }
-        .logout-link { display: block; text-align: center; color: var(--text-muted); text-decoration: none; margin-top: 20px; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
     </style>
 </head>
-<body>
-    <header class="header">
-        <img src="logo.png" alt="FCAPT Logo" class="logo">
-        <h2 style="margin:0">FCAPT | STUDENT PORTAL</h2>
-        <div class="user-badge" id="student-meta">Loading Profile...</div>
-    </header>
+<body class="p-4 md:p-8">
 
-    <main class="container">
-        <div class="card">
-            <h3>Mark Attendance</h3>
-            <select id="course-select"><option value="">Select Course...</option></select>
-            <button class="btn" onclick="markAttendance()">Confirm Presence</button>
-        </div>
-        <div class="card">
-            <h3 style="margin-top:0;">My Overview</h3>
-            <div id="stats-container"><p>Select a course to view stats.</p></div>
-        </div>
-        <a href="#" class="logout-link" onclick="logout()">Sign Out</a>
-    </main>
-    <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
+    <div id="loader" class="fixed inset-0 flex items-center justify-center bg-white z-50">
+        <p class="text-blue-600 font-bold animate-pulse">Syncing Cloud Attendance...</p>
+    </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <div class="max-w-6xl mx-auto">
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+            <div>
+                <h1 class="text-xs font-bold text-blue-500 uppercase tracking-widest mb-1">Attendance Portal</h1>
+                <h2 id="student-name" class="text-4xl font-black text-slate-900 leading-tight">---</h2>
+                <p class="text-slate-400 font-mono mt-2 text-sm">Identity: 065**********</p>
+            </div>
+            <div class="mt-6 md:mt-0 bg-blue-50 px-6 py-3 rounded-2xl">
+                <span class="text-xs font-bold text-blue-400 uppercase block">Current Session</span>
+                <p id="week-number" class="text-2xl font-extrabold text-blue-700">Week --</p>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-center">
+                <h3 class="text-slate-400 text-xs font-bold uppercase mb-4 tracking-wider">Overall Attendance</h3>
+                <div class="flex items-baseline gap-2">
+                    <span id="total-attendance" class="text-6xl font-black text-slate-900">0%</span>
+                    <span id="attendance-status" class="text-sm font-bold px-2 py-1 rounded-lg">Checking...</span>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2 bg-white p-8 rounded-3xl shadow-sm border border-slate-100 grid grid-cols-2 gap-6">
+                <div>
+                    <h3 class="text-slate-400 text-xs font-bold uppercase mb-1">Registration No</h3>
+                    <p id="reg-no" class="text-lg font-bold text-slate-800">---</p>
+                </div>
+                <div>
+                    <h3 class="text-slate-400 text-xs font-bold uppercase mb-1">Program</h3>
+                    <p id="program-name" class="text-lg font-semibold text-slate-800">---</p>
+                </div>
+                <div class="col-span-2">
+                    <h3 class="text-slate-400 text-xs font-bold uppercase mb-1">Class Assignment</h3>
+                    <p id="class-name" class="text-lg font-semibold text-slate-800">---</p>
+                </div>
+            </div>
+        </div>
+
+        <section class="mt-10">
+            <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                Course Attendance Breakdown
+            </h3>
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-slate-50 border-b border-slate-100">
+                        <tr>
+                            <th class="px-8 py-5 text-xs font-bold text-slate-400 uppercase">Course Module</th>
+                            <th class="px-8 py-5 text-xs font-bold text-slate-400 uppercase text-right">Attendance %</th>
+                        </tr>
+                    </thead>
+                    <tbody id="course-list" class="divide-y divide-slate-50">
+                        </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
     <script>
-        const SB_URL = 'https://loblicverqcijkqatvhs.supabase.co';
-        const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvYmxpY3ZlcnFjaWprcWF0dmhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMTAyOTYsImV4cCI6MjA5MTY4NjI5Nn0.vV-rpPzniYgSTzBStfikL_SJc722-41ezkiJnI4nOPs';
-        const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
-        const user = JSON.parse(localStorage.getItem('fcapt_user'));
+        // Use your project's environment variables here
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+        const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        function toggleTheme() {
-            const current = document.documentElement.getAttribute('data-theme');
-            const target = current === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', target);
-            localStorage.setItem('fcapt_theme', target);
+        async function initPortal() {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+
+                if (user) {
+                    const { data: student, error } = await supabase
+                        .from('attendance_records')
+                        .select('*')
+                        .eq('student_id', user.id)
+                        .single();
+
+                    if (error) throw error;
+
+                    // Update DOM elements
+                    document.getElementById('student-name').innerText = student.full_name;
+                    document.getElementById('week-number').innerText = `Week ${student.current_week}`;
+                    document.getElementById('total-attendance').innerText = `${student.total_attendance_pct}%`;
+                    document.getElementById('reg-no').innerText = student.registration_no;
+                    document.getElementById('program-name').innerText = student.program;
+                    document.getElementById('class-name').innerText = student.class_name;
+
+                    // Status Logic
+                    const statusEl = document.getElementById('attendance-status');
+                    if (student.total_attendance_pct >= 75) {
+                        statusEl.innerText = 'Good Standing';
+                        statusEl.classList.add('bg-green-100', 'text-green-600');
+                    } else {
+                        statusEl.innerText = 'Below Requirement';
+                        statusEl.classList.add('bg-red-100', 'text-red-600');
+                    }
+
+                    // Build Course Table
+                    const courseList = document.getElementById('course-list');
+                    student.course_attendance_log.forEach(course => {
+                        const row = `
+                            <tr class="hover:bg-slate-50">
+                                <td class="px-8 py-5 font-semibold text-slate-700">${course.name}</td>
+                                <td class="px-8 py-5 text-right font-mono font-bold text-blue-600">${course.percentage}%</td>
+                            </tr>
+                        `;
+                        courseList.innerHTML += row;
+                    });
+                }
+            } catch (err) {
+                console.error("Portal Error:", err);
+            } finally {
+                document.getElementById('loader').classList.add('hidden');
+            }
         }
-        document.documentElement.setAttribute('data-theme', localStorage.getItem('fcapt_theme') || 'light');
 
-        async function init() {
-            document.getElementById('student-meta').innerText = `${user.full_name} | ${user.program} | ${user.student_class} | ${user.reg_num}`;
-            const { data: courses } = await supabaseClient.from('courses').select('*');
-            const select = document.getElementById('course-select');
-            courses.forEach(c => {
-                const opt = document.createElement('option');
-                opt.value = c.id;
-                opt.textContent = `${c.course_code}: ${c.course_title}`;
-                select.appendChild(opt);
-            });
-        }
-
-        async function markAttendance() {
-            const cid = document.getElementById('course-select').value;
-            if(!cid) return alert("Select a course");
-            await supabaseClient.from('attendance').insert([{ student_id: user.id, course_id: cid }]);
-            alert("Attendance Marked!");
-        }
-
-        function logout() { localStorage.clear(); window.location.href = 'index.html'; }
-        init();
+        window.onload = initPortal;
     </script>
 </body>
 </html>
