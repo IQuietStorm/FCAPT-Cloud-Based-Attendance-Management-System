@@ -43,6 +43,18 @@
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
         const user = JSON.parse(localStorage.getItem('fcapt_user'));
 
+        function toggleTheme() {
+
+            const current = document.documentElement.getAttribute('data-theme');
+
+            const target = current === 'dark' ? 'light' : 'dark';
+
+            document.documentElement.setAttribute('data-theme', target);
+
+            localStorage.setItem('fcapt_theme', target);
+
+        }
+
         async function init() {
             if (!user) window.location.href = 'index.html';
             document.getElementById('lec-name').innerText = "Lec. " + user.full_name;
