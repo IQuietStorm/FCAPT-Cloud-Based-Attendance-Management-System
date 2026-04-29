@@ -41,6 +41,33 @@
         .badge.danger { background: #fff1f2; color: var(--danger); }
         .badge.success { background: #f0fdf4; color: var(--success); }
 
+        .filters {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: end;
+            margin: 14px 0 14px 0;
+        }
+        .filters .field { display: flex; flex-direction: column; gap: 6px; min-width: 180px; }
+        .filters label { font-size: 0.78rem; color: var(--text-muted); font-weight: 600; }
+        .filters select {
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            color: var(--text-main);
+            border-radius: 10px;
+            padding: 10px 12px;
+            outline: none;
+        }
+        .filters button {
+            border: 1px solid var(--border-color);
+            background: transparent;
+            color: var(--text-main);
+            border-radius: 10px;
+            padding: 10px 12px;
+            cursor: pointer;
+            height: 40px;
+        }
+
         @media (max-width: 720px) {
             .header { padding: 1rem 1rem; }
             .container { margin: 1.25rem auto; padding: 0 12px; }
@@ -62,6 +89,27 @@
     <main class="container">
         <div class="card">
             <h3 style="margin-top:0; color:var(--fcapt-primary);">Student Attendance Report</h3>
+            <div class="filters" aria-label="Filters">
+                <div class="field">
+                    <label for="filter-class">Class</label>
+                    <select id="filter-class">
+                        <option value="">All</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="filter-course">Course</label>
+                    <select id="filter-course">
+                        <option value="">All</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="filter-program">Program</label>
+                    <select id="filter-program">
+                        <option value="">All</option>
+                    </select>
+                </div>
+                <button id="filters-reset" type="button">Reset</button>
+            </div>
             <div class="table-wrap">
                 <table>
                     <thead><tr><th>Student & Class</th><th>Course</th><th>Stats</th><th>Status</th></tr></thead>
@@ -97,6 +145,11 @@
             if (!user) window.location.href = 'index.html';
             document.getElementById('lec-name').innerText = "Lec. " + user.full_name;
 
+            const filterClassEl = document.getElementById('filter-class');
+            const filterCourseEl = document.getElementById('filter-course');
+            const filterProgramEl = document.getElementById('filter-program');
+            const resetFiltersEl = document.getElementById('filters-reset');
+
             const { data: settings } = await supabaseClient.from('settings').select('*').single();
             const start = new Date(settings.resumption_date);
             const end = new Date(settings.semester_end_date);
@@ -108,19 +161,87 @@
             const { data: students } = await supabaseClient.from('profiles').select('*').eq('role', 'student');
 
             const tbody = document.getElementById('report-body');
+            const fragment = document.createDocumentFragment();
+            const classSet = new Set();
+            const courseSet = new Set();
+            const programSet = new Set();
+
+            function safeText(v) {
+                return (v === null || v === undefined) ? '' : String(v);
+            }
+
             students.forEach(s => {
                 myCourses.forEach(c => {
                     const count = att.filter(a => a.student_id === s.id && a.course_id === c.id).length;
-                    if (count > 0) {
-                        const p = Math.round((count / totalWeeks) * 100);
-                        tbody.innerHTML += `<tr>
-                            <td><strong>${s.full_name}</strong><br><small style="color:var(--text-muted)">${s.program} (${s.student_class})</small></td>
-                            <td>${c.course_code}</td>
-                            <td>${p}% (${count}/${totalWeeks})</td>
-                            <td><span class="badge ${p < 75 ? 'danger' : 'success'}">${p < 75 ? 'Shortfall' : 'Eligible'}</span></td>
-                        </tr>`;
-                    }
+                    if (count <= 0) return;
+
+                    const program = safeText(s.program).trim();
+                    const studentClass = safeText(s.student_class).trim();
+                    const courseCode = safeText(c.course_code).trim();
+
+                    if (studentClass) classSet.add(studentClass);
+                    if (courseCode) courseSet.add(courseCode);
+                    if (program) programSet.add(program);
+
+                    const p = Math.round((count / totalWeeks) * 100);
+                    const tr = document.createElement('tr');
+                    tr.dataset.class = studentClass;
+                    tr.dataset.course = courseCode;
+                    tr.dataset.program = program;
+                    tr.innerHTML = `
+                        <td><strong>${safeText(s.full_name)}</strong><br><small style="color:var(--text-muted)">${program} (${studentClass})</small></td>
+                        <td>${courseCode}</td>
+                        <td>${p}% (${count}/${totalWeeks})</td>
+                        <td><span class="badge ${p < 75 ? 'danger' : 'success'}">${p < 75 ? 'Shortfall' : 'Eligible'}</span></td>
+                    `;
+                    fragment.appendChild(tr);
                 });
+            });
+
+            tbody.innerHTML = '';
+            tbody.appendChild(fragment);
+
+            function fillSelect(selectEl, values) {
+                const current = selectEl.value;
+                selectEl.querySelectorAll('option:not([value=""])').forEach(o => o.remove());
+                values
+                    .filter(Boolean)
+                    .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+                    .forEach(v => {
+                        const opt = document.createElement('option');
+                        opt.value = v;
+                        opt.textContent = v;
+                        selectEl.appendChild(opt);
+                    });
+                selectEl.value = current;
+            }
+
+            fillSelect(filterClassEl, Array.from(classSet));
+            fillSelect(filterCourseEl, Array.from(courseSet));
+            fillSelect(filterProgramEl, Array.from(programSet));
+
+            function applyFilters() {
+                const cls = filterClassEl.value;
+                const course = filterCourseEl.value;
+                const program = filterProgramEl.value;
+
+                Array.from(tbody.querySelectorAll('tr')).forEach(tr => {
+                    const ok =
+                        (!cls || tr.dataset.class === cls) &&
+                        (!course || tr.dataset.course === course) &&
+                        (!program || tr.dataset.program === program);
+                    tr.style.display = ok ? '' : 'none';
+                });
+            }
+
+            filterClassEl.addEventListener('change', applyFilters);
+            filterCourseEl.addEventListener('change', applyFilters);
+            filterProgramEl.addEventListener('change', applyFilters);
+            resetFiltersEl.addEventListener('click', () => {
+                filterClassEl.value = '';
+                filterCourseEl.value = '';
+                filterProgramEl.value = '';
+                applyFilters();
             });
         }
         function logout() { localStorage.clear(); window.location.href = 'index.html'; }
