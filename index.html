@@ -1,278 +1,201 @@
 <!DOCTYPE html>
+
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>FCAPT Portal | Login</title>
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
     <style>
-        :root { 
-            --fcapt-primary: #1e4620; 
-            --fcapt-bg: #f8fafc; 
-            --card-bg: #ffffff; 
-            --text-main: #1e293b; 
-            --border-color: #e2e8f0; 
-            --input-bg: #ffffff;
-        }
 
-        [data-theme="dark"] { 
-            --fcapt-bg: #0f172a; 
-            --card-bg: #1e293b; 
-            --text-main: #f1f5f9; 
-            --border-color: #334155; 
-            --input-bg: #0f172a;
-        }
+        :root { --fcapt-primary: #1e4620; --fcapt-bg: #f8fafc; --card-bg: #ffffff; --text-main: #1e293b; --border-color: #e2e8f0; }
 
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background: var(--fcapt-bg); 
-            color: var(--text-main); 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            min-height: 100vh; 
-            margin: 0; 
-            transition: background 0.3s, color 0.3s; 
-            padding: 20px; /* Added for mobile spacing */
-        }
+        [data-theme="dark"] { --fcapt-bg: #0f172a; --card-bg: #1e293b; --text-main: #f1f5f9; --border-color: #334155; }
 
-        /* Responsive Card */
-        .card { 
-            background: var(--card-bg); 
-            padding: 2.5rem 2rem; 
-            border-radius: 16px; 
-            border: 1px solid var(--border-color); 
-            width: 100%; 
-            max-width: 400px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05); 
-            text-align: center; 
-            transition: background 0.3s, border 0.3s;
-        }
+        body { font-family: 'Inter', sans-serif; background: var(--fcapt-bg); color: var(--text-main); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; transition: 0.3s; }
+
+        .card { background: var(--card-bg); padding: 2.5rem; border-radius: 16px; border: 1px solid var(--border-color); width: 100%; max-width: 380px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; }
 
         .input-group { margin-bottom: 1.2rem; text-align: left; }
-        
-        label { 
-            display: block; 
-            margin-bottom: 8px; 
-            font-weight: 600; 
-            font-size: 0.85rem; 
-            color: #94a3b8; /* Dimmer label for better contrast */
-        }
 
-        input, select { 
-            width: 100%; 
-            padding: 12px; 
-            border: 1.5px solid var(--border-color); 
-            border-radius: 8px; 
-            background: var(--input-bg); 
-            color: var(--text-main); 
-            box-sizing: border-box; 
-            font-size: 1rem;
-            outline: none;
-            transition: border-color 0.2s;
-        }
+        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.85rem; color: #64748b; }
 
-        input:focus { border-color: var(--fcapt-primary); }
+        input, select { width: 100%; padding: 12px; border: 1.5px solid var(--border-color); border-radius: 8px; background: var(--card-bg); color: var(--text-main); box-sizing: border-box; }
 
-        .btn { 
-            width: 100%; 
-            background: var(--fcapt-primary); 
-            color: white; 
-            padding: 14px; 
-            border: none; 
-            border-radius: 8px; 
-            font-weight: 700; 
-            font-size: 1rem;
-            cursor: pointer; 
-            transition: opacity 0.2s;
-            margin-top: 10px;
-        }
+        .btn { width: 100%; background: var(--fcapt-primary); color: white; padding: 14px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; }
 
-        .btn:hover { opacity: 0.9; }
+        .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); }
 
-        /* Modal Styles */
-        .modal { 
-            display: none; 
-            position: fixed; 
-            z-index: 100; 
-            left: 0; top: 0; 
-            width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.7); 
-            backdrop-filter: blur(4px); 
-        }
+        .modal-content { background: var(--card-bg); margin: 15% auto; padding: 30px; border-radius: 12px; width: 90%; max-width: 400px; text-align: left; }
 
-        .modal-content { 
-            background: var(--card-bg); 
-            margin: 10% auto; 
-            padding: 30px; 
-            border-radius: 12px; 
-            width: 90%; 
-            max-width: 400px; 
-            text-align: left; 
-            border: 1px solid var(--border-color);
-        }
-
-        /* Floating Theme Toggle */
-        .theme-toggle { 
-            position: fixed; 
-            bottom: 20px; 
-            right: 20px; 
-            width: 50px; 
-            height: 50px; 
-            border-radius: 50%; 
-            background: var(--fcapt-primary); 
-            color: white; 
-            border: none; 
-            cursor: pointer; 
-            z-index: 1000; 
-            font-size: 1.2rem;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+        .theme-toggle { position: fixed; bottom: 20px; right: 20px; width: 45px; height: 45px; border-radius: 50%; background: var(--fcapt-primary); color: white; border: none; cursor: pointer; z-index: 1000; }
 
         .logo { height: 80px; margin-bottom: 15px; }
 
-        /* Mobile Adjustments */
-        @media (max-width: 480px) {
-            .card { padding: 2rem 1.5rem; }
-            .logo { height: 65px; }
-            h2 { font-size: 1.25rem; }
-        }
     </style>
+
 </head>
+
 <body>
-    
+
     <div class="card">
+
         <img src="logo.png" alt="FCAPT Logo" class="logo">
-        <h2 style="color: var(--fcapt-primary); margin-bottom: 20px; font-weight: 800;">FCAPT PORTAL | LOGIN</h2>
-        
+
+        <h2 style="color: var(--fcapt-primary); margin-bottom: 20px;">FCAPT PORTAL | LOGIN</h2>
+
         <form id="loginForm">
+
             <div class="input-group">
+
                 <label>ID Number</label>
-                <input type="text" id="reg_num" placeholder="Enter your ID" required>
+
+                <input type="text" id="reg_num" placeholder="Enter ID" required>
+
             </div>
+
             <div class="input-group">
+
                 <label>Password</label>
-                <input type="password" id="password" placeholder="••••••••" required>
+
+                <input type="password" id="password" required>
+
             </div>
-            <button type="submit" class="btn" id="loginBtn">Sign In</button>
+
+            <button type="submit" class="btn">Sign In</button>
+
         </form>
+
     </div>
+
+
 
     <div id="profileModal" class="modal">
-        <div class="modal-content">
-            <h3 style="color: var(--fcapt-primary); margin-top: 0;">Complete Your Profile</h3>
-            <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 20px;">Please select your academic details to continue.</p>
-            
-            <div class="input-group">
-                <label>Program</label>
-                <select id="set-program">
-                    <option value="AEM">AEM</option><option value="AHP">AHP</option>
-                    <option value="CEM">CEM</option><option value="CPS">CPS</option><option value="NCC">NCC</option>
-                </select>
-            </div>
 
-            <div class="input-group">
-                <label>Class</label>
-                <select id="set-class">
-                    <option value="ND I">ND I</option><option value="ND II">ND II</option>
-                    <option value="Pre-HND">Pre-HND</option><option value="HND I">HND I</option><option value="HND II">HND II</option>
-                </select>
-            </div>
-            
-            <button class="btn" onclick="submitProfile()">Save & Enter Portal</button>
+        <div class="modal-content">
+
+            <h3 style="color: var(--fcapt-primary);">Complete Your Profile</h3>
+
+            <label>Program</label>
+
+            <select id="set-program">
+
+                <option value="AEM">AEM</option><option value="AHP">AHP</option>
+
+                <option value="CEM">CEM</option><option value="CPS">CPS</option><option value="NCC">NCC</option>
+
+            </select>
+
+            <label style="margin-top:15px;">Class</label>
+
+            <select id="set-class">
+
+                <option value="ND I">ND I</option><option value="ND II">ND II</option>
+
+                <option value="Pre-HND">Pre-HND</option><option value="HND I">HND I</option><option value="HND II">HND II</option>
+
+            </select>
+
+            <button class="btn" onclick="submitProfile()" style="margin-top:20px;">Save & Enter</button>
+
         </div>
+
     </div>
 
-    <button class="theme-toggle" id="themeBtn" title="Toggle Night Mode">🌓</button>
+    <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
+
+
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <script>
-        // Your existing configuration
+
         const SB_URL = 'https://loblicverqcijkqatvhs.supabase.co';
+
         const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvYmxpY3ZlcnFjaWprcWF0dmhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMTAyOTYsImV4cCI6MjA5MTY4NjI5Nn0.vV-rpPzniYgSTzBStfikL_SJc722-41ezkiJnI4nOPs';
+
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
-        
+
         let activeUser = null;
 
-        // Theme Toggle Logic
-        const themeBtn = document.getElementById('themeBtn');
-        const setHeaderTheme = (theme) => {
-            document.documentElement.setAttribute('data-theme', theme);
-            localStorage.setItem('fcapt_theme', theme);
-        };
 
-        themeBtn.addEventListener('click', () => {
+
+        function toggleTheme() {
+
             const current = document.documentElement.getAttribute('data-theme');
-            setHeaderTheme(current === 'dark' ? 'light' : 'dark');
-        });
 
-        // Initialize theme
-        setHeaderTheme(localStorage.getItem('fcapt_theme') || 'light');
+            const target = current === 'dark' ? 'light' : 'dark';
 
-        // Login Logic
+            document.documentElement.setAttribute('data-theme', target);
+
+            localStorage.setItem('fcapt_theme', target);
+
+        }
+
+        document.documentElement.setAttribute('data-theme', localStorage.getItem('fcapt_theme') || 'light');
+
+
+
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
+
             e.preventDefault();
-            const loginBtn = document.getElementById('loginBtn');
-            loginBtn.innerText = "Authenticating...";
-            loginBtn.disabled = true;
 
-            const regNum = document.getElementById('reg_num').value.trim();
-            const pass = document.getElementById('password').value;
+            const { data, error } = await supabaseClient.from('profiles').select('*').eq('reg_num', document.getElementById('reg_num').value.trim()).single();
 
-            try {
-                const { data, error } = await supabaseClient
-                    .from('profiles')
-                    .select('*')
-                    .eq('reg_num', regNum)
-                    .single();
+            if (!error && data && data.password === document.getElementById('password').value) {
 
-                if (!error && data && data.password === pass) {
-                    activeUser = data;
-                    localStorage.setItem('fcapt_user', JSON.stringify(data));
-                    
-                    if (data.role === 'student' && !data.program) {
-                        document.getElementById('profileModal').style.display = 'block';
-                    } else { 
-                        redirect(data); 
-                    }
-                } else {
-                    alert("Invalid Registration Number or Password");
-                }
-            } catch (err) {
-                alert("Connection Error. Please try again.");
-            } finally {
-                loginBtn.innerText = "Sign In";
-                loginBtn.disabled = false;
-            }
+                activeUser = data;
+
+                localStorage.setItem('fcapt_user', JSON.stringify(data));
+
+                if (data.role === 'student' && !data.program) {
+
+                    document.getElementById('profileModal').style.display = 'block';
+
+                } else { redirect(data); }
+
+            } else { alert("Login Failed"); }
+
         });
+
+
 
         async function submitProfile() {
-            const p = document.getElementById('set-program').value;
-            const c = document.getElementById('set-class').value;
-            
-            const { error } = await supabaseClient
-                .from('profiles')
-                .update({ program: p, student_class: c })
-                .eq('id', activeUser.id);
 
-            if (!error) {
-                activeUser.program = p; 
-                activeUser.student_class = c;
-                localStorage.setItem('fcapt_user', JSON.stringify(activeUser));
-                redirect(activeUser);
-            } else {
-                alert("Error updating profile.");
-            }
+            const p = document.getElementById('set-program').value;
+
+            const c = document.getElementById('set-class').value;
+
+            await supabaseClient.from('profiles').update({ program: p, student_class: c }).eq('id', activeUser.id);
+
+            activeUser.program = p; activeUser.student_class = c;
+
+            localStorage.setItem('fcapt_user', JSON.stringify(activeUser));
+
+            redirect(activeUser);
+
         }
+
+
 
         function redirect(u) {
+
             if (u.role === 'admin') window.location.href = 'admin_dashboard.html';
+
             else if (u.role === 'lecturer') window.location.href = 'lecturer_dashboard.html';
+
             else window.location.href = 'student_portal.html';
+
         }
+
     </script>
+
 </body>
+
 </html>
