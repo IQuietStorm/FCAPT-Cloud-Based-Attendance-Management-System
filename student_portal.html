@@ -45,6 +45,18 @@
         const user = JSON.parse(localStorage.getItem('fcapt_user'));
         let currentWeek = 1; let totalWeeks = 12;
 
+        function toggleTheme() {
+
+            const current = document.documentElement.getAttribute('data-theme');
+
+            const target = current === 'dark' ? 'light' : 'dark';
+
+            document.documentElement.setAttribute('data-theme', target);
+
+            localStorage.setItem('fcapt_theme', target);
+
+        }
+
         async function init() {
             if (!user) window.location.href = 'index.html';
             document.getElementById('user-name').innerText = user.full_name;
