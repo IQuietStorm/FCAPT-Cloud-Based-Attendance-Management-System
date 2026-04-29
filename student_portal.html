@@ -166,15 +166,76 @@
         </div>
     </div>
 
-    <script>
-        // Simple Theme Toggle to test CSS
-        function toggleTheme() {
-            const current = document.documentElement.getAttribute('data-theme');
-            const target = current === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', target);
-            localStorage.setItem('fcapt_theme', target);
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    const SB_URL = 'https://loblicverqcijkqatvhs.supabase.co';
+    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvYmxpY3ZlcnFjaWprcWF0dmhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMTAyOTYsImV4cCI6MjA5MTY4NjI5Nn0.vV-rpPzniYgSTzBStfikL_SJc722-41ezkiJnI4nOPs';
+    const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+
+    // 1. Theme Logic (Keep this)
+    function toggleTheme() {
+        const current = document.documentElement.getAttribute('data-theme');
+        const target = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', target);
+        localStorage.setItem('fcapt_theme', target);
+    }
+    document.documentElement.setAttribute('data-theme', localStorage.getItem('fcapt_theme') || 'light');
+
+    // 2. Data Fetching Logic
+    async function loadStudentData() {
+        // Get user from localStorage (saved during login)
+        const cachedUser = JSON.parse(localStorage.getItem('fcapt_user'));
+
+        if (!cachedUser) {
+            window.location.href = 'index.html'; // Redirect to login if no session
+            return;
         }
-        document.documentElement.setAttribute('data-theme', localStorage.getItem('fcapt_theme') || 'light');
-    </script>
+
+        try {
+            // Fetch fresh data from Supabase to get attendance and courses
+            // Assuming your table is 'profiles' based on your login code
+            const { data: student, error } = await supabaseClient
+                .from('profiles')
+                .select('*')
+                .eq('id', cachedUser.id)
+                .single();
+
+            if (error) throw error;
+
+            // Populate UI Elements
+            document.getElementById('disp-name').innerText = student.full_name || 'Student';
+            document.getElementById('disp-attendance').innerText = (student.overall_attendance || 0) + '%';
+            document.getElementById('disp-program').innerText = student.program || 'N/A';
+            document.getElementById('disp-class').innerText = student.student_class || 'N/A';
+
+            // Populate Course Table
+            const courseContainer = document.getElementById('course-list');
+            
+            // Check if course_data exists and is an array
+            if (student.course_data && Array.isArray(student.course_data)) {
+                courseContainer.innerHTML = ''; // Clear the "Synchronizing..." message
+                student.course_data.forEach(course => {
+                    courseContainer.innerHTML += `
+                        <tr>
+                            <td>${course.name}</td>
+                            <td style="text-align: right; font-weight: 700; color: var(--fcapt-primary);">
+                                ${course.attendance}%
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else {
+                courseContainer.innerHTML = '<tr><td colspan="2" style="text-align:center; color:var(--text-muted);">No course records found.</td></tr>';
+            }
+
+        } catch (err) {
+            console.error("Portal Error:", err);
+            document.getElementById('disp-name').innerText = "Error Loading Data";
+        }
+    }
+
+    // Initialize on load
+    window.onload = loadStudentData;
+</script>
 </body>
 </html>
