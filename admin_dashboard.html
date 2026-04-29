@@ -129,6 +129,18 @@
         const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvYmxpY3ZlcnFjaWprcWF0dmhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMTAyOTYsImV4cCI6MjA5MTY4NjI5Nn0.vV-rpPzniYgSTzBStfikL_SJc722-41ezkiJnI4nOPs';
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
+        function toggleTheme() {
+
+            const current = document.documentElement.getAttribute('data-theme');
+
+            const target = current === 'dark' ? 'light' : 'dark';
+
+            document.documentElement.setAttribute('data-theme', target);
+
+            localStorage.setItem('fcapt_theme', target);
+
+        }
+
         function showTab(tabId) {
             document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
