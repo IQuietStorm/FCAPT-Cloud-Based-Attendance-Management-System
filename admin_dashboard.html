@@ -6,39 +6,76 @@
     <title>Admin Console | FCAPT</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --fcapt-primary: #1e4620; --fcapt-bg: #f1f5f9; --white: #ffffff; }
-        body { font-family: 'Inter', sans-serif; background: var(--fcapt-bg); margin: 0; color: #1e293b; }
+        :root {
+            --fcapt-primary: #1e4620;
+            --fcapt-bg: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --header-bg: #1a1a1a;
+            --table-head-bg: #f8fafc;
+            --editing-bg: #f0fdf4;
+        }
+
+        [data-theme="dark"] {
+            --fcapt-bg: #0b1220;
+            --card-bg: #111c2e;
+            --text-main: #f1f5f9;
+            --text-muted: #a3b2c7;
+            --border-color: #22314a;
+            --header-bg: #0f172a;
+            --table-head-bg: #0f172a;
+            --editing-bg: rgba(20, 83, 45, 0.22);
+        }
+
+        body { font-family: 'Inter', sans-serif; background: var(--fcapt-bg); margin: 0; color: var(--text-main); }
         
-        .header { background: #1a1a1a; color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--fcapt-primary); }
+        .header { background: var(--header-bg); color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--fcapt-primary); gap: 12px; flex-wrap: wrap; }
+        .header-actions { display: flex; gap: 10px; align-items: center; }
+        .icon-btn { width: 40px; height: 40px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.7); background: transparent; color: white; cursor: pointer; }
         
-        .nav-tabs { background: white; display: flex; border-bottom: 1px solid #e2e8f0; padding: 0 2rem; }
-        .tab { padding: 1rem 1.5rem; cursor: pointer; font-weight: 600; color: #64748b; border-bottom: 3px solid transparent; }
+        .nav-tabs { background: var(--card-bg); display: flex; border-bottom: 1px solid var(--border-color); padding: 0 2rem; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .tab { padding: 1rem 1.5rem; cursor: pointer; font-weight: 600; color: var(--text-muted); border-bottom: 3px solid transparent; white-space: nowrap; }
         .tab.active { color: var(--fcapt-primary); border-bottom-color: var(--fcapt-primary); }
 
         .container { max-width: 950px; margin: 2rem auto; padding: 0 20px; }
-        .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 2rem; }
+        .card { background: var(--card-bg); padding: 2rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 2rem; border: 1px solid var(--border-color); }
         
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .form-group { margin-bottom: 1.2rem; }
-        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 0.85rem; color: #475569; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; font-family: inherit; }
+        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 0.85rem; color: var(--text-muted); }
+        input, select { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; box-sizing: border-box; font-family: inherit; background: var(--card-bg); color: var(--text-main); }
         
         .btn-action { background: var(--fcapt-primary); color: white; padding: 12px 20px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.2s; }
         .btn-edit { background: #64748b; font-size: 0.75rem; padding: 6px 12px; margin-left: 5px; }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
-        th { color: #64748b; font-weight: 600; background: #f8fafc; }
+        .table-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 10px; border: 1px solid var(--border-color); }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; min-width: 520px; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid rgba(148,163,184,0.22); font-size: 0.9rem; }
+        th { color: var(--text-muted); font-weight: 600; background: var(--table-head-bg); }
 
         .hidden { display: none; }
-        .editing-mode { border: 2px solid var(--fcapt-primary); padding: 15px; border-radius: 8px; margin-bottom: 20px; background: #f0fdf4; }
+        .editing-mode { border: 2px solid var(--fcapt-primary); padding: 15px; border-radius: 8px; margin-bottom: 20px; background: var(--editing-bg); }
+
+        @media (max-width: 720px) {
+            .header { padding: 1rem 1rem; }
+            .nav-tabs { padding: 0 1rem; }
+            .container { margin: 1.25rem auto; padding: 0 12px; }
+            .card { padding: 1.25rem; }
+            .grid { grid-template-columns: 1fr; }
+            .tab { padding: 0.9rem 1rem; }
+        }
     </style>
 </head>
 <body>
 
     <header class="header">
         <h2 style="margin:0">FCAPT Administrator</h2>
-        <button onclick="logout()" style="background:transparent; border:1px solid white; color:white; padding:6px 12px; cursor:pointer; border-radius:4px;">Logout</button>
+        <div class="header-actions">
+            <button class="icon-btn" type="button" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle theme">🌓</button>
+            <button onclick="logout()" style="background:transparent; border:1px solid white; color:white; padding:6px 12px; cursor:pointer; border-radius:4px;">Logout</button>
+        </div>
     </header>
 
     <div class="nav-tabs">
@@ -115,10 +152,12 @@
             </div>
 
             <h3 style="margin-top: 2.5rem;">Existing Course Registry</h3>
-            <table id="course-table">
-                <thead><tr><th>Code</th><th>Title</th><th>Lecturer</th><th>Action</th></tr></thead>
-                <tbody id="course-list"></tbody>
-            </table>
+            <div class="table-wrap">
+                <table id="course-table">
+                    <thead><tr><th>Code</th><th>Title</th><th>Lecturer</th><th>Action</th></tr></thead>
+                    <tbody id="course-list"></tbody>
+                </table>
+            </div>
         </section>
 
     </main>
@@ -129,17 +168,21 @@
         const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvYmxpY3ZlcnFjaWprcWF0dmhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMTAyOTYsImV4cCI6MjA5MTY4NjI5Nn0.vV-rpPzniYgSTzBStfikL_SJc722-41ezkiJnI4nOPs';
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
-        function toggleTheme() {
-
-            const current = document.documentElement.getAttribute('data-theme');
-
-            const target = current === 'dark' ? 'light' : 'dark';
-
-            document.documentElement.setAttribute('data-theme', target);
-
-            localStorage.setItem('fcapt_theme', target);
-
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('fcapt_theme', theme);
         }
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            setTheme(current === 'dark' ? 'light' : 'dark');
+        }
+
+        (function initTheme() {
+            const saved = localStorage.getItem('fcapt_theme');
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            setTheme(saved || (prefersDark ? 'dark' : 'light'));
+        })();
 
         function showTab(tabId) {
             document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
