@@ -3,172 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FCAPT Portal | Lecturer Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <title>Lecturer Dashboard | FCAPT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --fcapt-primary: #1e4620;
-            --fcapt-bg: #f8fafc;
-            --card-bg: #ffffff;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --border-color: #e2e8f0;
-            --accent-blue: #2563eb;
-        }
-
-        [data-theme="dark"] {
-            --fcapt-bg: #0f172a;
-            --card-bg: #1e293b;
-            --text-main: #f1f5f9;
-            --text-muted: #94a3b8;
-            --border-color: #334155;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--fcapt-bg);
-            color: var(--text-main);
-            margin: 0;
-            transition: 0.3s;
-            padding-bottom: 50px;
-        }
-
-        nav {
-            background: var(--card-bg);
-            padding: 1rem 1.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border-color);
-            position: sticky;
-            top: 0;
-            z-index: 50;
-        }
-
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        /* Lecturer Profile Header */
-        .lecturer-header {
-            background: var(--card-bg);
-            padding: 2rem;
-            border-radius: 20px;
-            border: 1px solid var(--border-color);
-            margin-bottom: 25px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        @media (min-width: 768px) {
-            .lecturer-header { flex-direction: row; justify-content: space-between; align-items: center; }
-        }
-
-        .role-badge {
-            background: rgba(30, 70, 32, 0.1);
-            color: var(--fcapt-primary);
-            padding: 5px 12px;
-            border-radius: 8px;
-            font-size: 0.7rem;
-            font-weight: 800;
-            text-transform: uppercase;
-        }
-
-        /* Course Cards Grid */
-        .course-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
-        }
-
-        @media (min-width: 768px) {
-            .course-grid { grid-template-columns: repeat(2, 1fr); }
-        }
-
-        .course-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 1.5rem;
-            transition: transform 0.2s;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .course-card:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
-
-        .course-code { font-weight: 800; color: var(--accent-blue); font-size: 0.8rem; margin-bottom: 5px; }
-        .course-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 15px; }
-
-        .btn-action {
-            background: var(--fcapt-primary);
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 10px;
-            font-weight: 700;
-            cursor: pointer;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .theme-toggle {
-            width: 40px; height: 40px; border-radius: 50%;
-            background: var(--fcapt-primary); color: white;
-            border: none; cursor: pointer;
-        }
-
-        .logout-link { color: #ef4444; font-size: 0.85rem; cursor: pointer; text-decoration: none; font-weight: 600; }
+        :root { --fcapt-primary: #1e4620; --fcapt-bg: #f8fafc; --danger: #be123c; --success: #15803d; }
+        body { font-family: 'Inter', sans-serif; background: var(--fcapt-bg); margin: 0; }
+        .header { background: var(--fcapt-primary); color: white; padding: 1.2rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+        .container { max-width: 1000px; margin: 2rem auto; padding: 0 20px; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #f1f5f9; }
+        th { background: #f8fafc; color: #64748b; font-size: 0.75rem; text-transform: uppercase; }
+        .badge { padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: bold; }
+        .badge.danger { background: #fff1f2; color: var(--danger); }
+        .badge.success { background: #f0fdf4; color: var(--success); }
     </style>
 </head>
 <body>
-
-    <nav>
-        <div style="font-weight: 800; color: var(--fcapt-primary);">FCAPT | LECTURER</div>
-        <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
-    </nav>
-
-    <div class="container">
-        <div class="lecturer-header">
-            <div>
-                <span class="role-badge">Academic Staff</span>
-                <h2 style="margin: 10px 0 5px 0;" id="lecturer-name">Loading Profile...</h2>
-                <span style="color: var(--text-muted); font-size: 0.9rem;">Department of Computer Science</span>
-            </div>
-            <div style="text-align: right;">
-                <a href="#" class="logout-link" onclick="logout()">Sign Out</a>
-            </div>
+    <header class="header">
+        <div>
+            <h2 id="lec-name" style="margin:0">...</h2>
+            <small id="week-info" style="opacity:0.9;">...</small>
         </div>
-
-        <h3 style="margin-bottom: 20px;">My Assigned Courses</h3>
-
-        <div class="course-grid" id="course-container">
-            <div class="course-card">
-                <p style="color: var(--text-muted);">Fetching assigned modules...</p>
-            </div>
+        <button onclick="logout()" style="background:none; border:1px solid white; color:white; padding:5px 10px; cursor:pointer; border-radius:4px;">Logout</button>
+    </header>
+    <main class="container">
+        <div class="card">
+            <h3 style="margin-top:0; color:var(--fcapt-primary);">Student Attendance Report</h3>
+            <table>
+                <thead><tr><th>Student & Class</th><th>Course</th><th>Stats</th><th>Status</th></tr></thead>
+                <tbody id="report-body"></tbody>
+            </table>
         </div>
-    </div>
-
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        function toggleTheme() {
-            const current = document.documentElement.getAttribute('data-theme');
-            const target = current === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', target);
-            localStorage.setItem('fcapt_theme', target);
-        }
-        document.documentElement.setAttribute('data-theme', localStorage.getItem('fcapt_theme') || 'light');
+        const SB_URL = 'https://loblicverqcijkqatvhs.supabase.co';
+        const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvYmxpY3ZlcnFjaWprcWF0dmhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMTAyOTYsImV4cCI6MjA5MTY4NjI5Nn0.vV-rpPzniYgSTzBStfikL_SJc722-41ezkiJnI4nOPs';
+        const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+        const user = JSON.parse(localStorage.getItem('fcapt_user'));
 
-        function logout() {
-            localStorage.removeItem('fcapt_user');
-            window.location.href = 'index.html';
+        async function init() {
+            if (!user) window.location.href = 'index.html';
+            document.getElementById('lec-name').innerText = "Lec. " + user.full_name;
+
+            const { data: settings } = await supabaseClient.from('settings').select('*').single();
+            const start = new Date(settings.resumption_date);
+            const end = new Date(settings.semester_end_date);
+            const totalWeeks = Math.ceil((end - start) / (7 * 24 * 60 * 60 * 1000));
+            document.getElementById('week-info').innerText = `Total Semester Duration: ${totalWeeks} Weeks`;
+
+            const { data: myCourses } = await supabaseClient.from('courses').select('*').eq('lecturer_id', user.id);
+            const { data: att } = await supabaseClient.from('attendance').select('*').in('course_id', myCourses.map(c => c.id));
+            const { data: students } = await supabaseClient.from('profiles').select('*').eq('role', 'student');
+
+            const tbody = document.getElementById('report-body');
+            students.forEach(s => {
+                myCourses.forEach(c => {
+                    const count = att.filter(a => a.student_id === s.id && a.course_id === c.id).length;
+                    if (count > 0) {
+                        const p = Math.round((count / totalWeeks) * 100);
+                        tbody.innerHTML += `<tr>
+                            <td><strong>${s.full_name}</strong><br><small style="color:#64748b">${s.program} (${s.student_class})</small></td>
+                            <td>${c.course_code}</td>
+                            <td>${p}% (${count}/${totalWeeks})</td>
+                            <td><span class="badge ${p < 75 ? 'danger' : 'success'}">${p < 75 ? 'Shortfall' : 'Eligible'}</span></td>
+                        </tr>`;
+                    }
+                });
+            });
         }
+        function logout() { localStorage.clear(); window.location.href = 'index.html'; }
+        init();
     </script>
 </body>
 </html>
