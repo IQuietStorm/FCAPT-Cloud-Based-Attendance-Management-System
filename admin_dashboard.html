@@ -4,74 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Console | FCAPT</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <style>
-        :root {
-            --fcapt-primary: #1e4620;
-            --fcapt-bg: #f1f5f9;
-            --card-bg: #ffffff;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --border-color: #e2e8f0;
-            --header-bg: #1a1a1a;
-            --table-head-bg: #f8fafc;
-            --editing-bg: #f0fdf4;
-        }
-
-        [data-theme="dark"] {
-            --fcapt-bg: #0b1220;
-            --card-bg: #111c2e;
-            --text-main: #f1f5f9;
-            --text-muted: #a3b2c7;
-            --border-color: #22314a;
-            --header-bg: #0f172a;
-            --table-head-bg: #0f172a;
-            --editing-bg: rgba(20, 83, 45, 0.22);
-        }
-
-        body { font-family: 'Inter', sans-serif; background: var(--fcapt-bg); margin: 0; color: var(--text-main); }
-        
-        .header { background: var(--header-bg); color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--fcapt-primary); gap: 12px; flex-wrap: wrap; }
-        .header-actions { display: flex; gap: 10px; align-items: center; }
-        .icon-btn { width: 40px; height: 40px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.7); background: transparent; color: white; cursor: pointer; }
-        
-        .nav-tabs { background: var(--card-bg); display: flex; border-bottom: 1px solid var(--border-color); padding: 0 2rem; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        .tab { padding: 1rem 1.5rem; cursor: pointer; font-weight: 600; color: var(--text-muted); border-bottom: 3px solid transparent; white-space: nowrap; }
-        .tab.active { color: var(--fcapt-primary); border-bottom-color: var(--fcapt-primary); }
-
-        .container { max-width: 950px; margin: 2rem auto; padding: 0 20px; }
-        .card { background: var(--card-bg); padding: 2rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 2rem; border: 1px solid var(--border-color); }
-        
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .form-group { margin-bottom: 1.2rem; }
-        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 0.85rem; color: var(--text-muted); }
-        input, select { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; box-sizing: border-box; font-family: inherit; background: var(--card-bg); color: var(--text-main); }
-        
-        .btn-action { background: var(--fcapt-primary); color: white; padding: 12px 20px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.2s; }
-        .btn-edit { background: #64748b; font-size: 0.75rem; padding: 6px 12px; margin-left: 5px; }
-        
-        .table-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 10px; border: 1px solid var(--border-color); }
-        table { width: 100%; border-collapse: collapse; margin-top: 1rem; min-width: 520px; }
-        th, td { text-align: left; padding: 12px; border-bottom: 1px solid rgba(148,163,184,0.22); font-size: 0.9rem; }
-        th { color: var(--text-muted); font-weight: 600; background: var(--table-head-bg); }
-
-        .hidden { display: none; }
-        .editing-mode { border: 2px solid var(--fcapt-primary); padding: 15px; border-radius: 8px; margin-bottom: 20px; background: var(--editing-bg); }
-
-        @media (max-width: 720px) {
-            .header { padding: 1rem 1rem; }
-            .nav-tabs { padding: 0 1rem; }
-            .container { margin: 1.25rem auto; padding: 0 12px; }
-            .card { padding: 1.25rem; }
-            .grid { grid-template-columns: 1fr; }
-            .tab { padding: 0.9rem 1rem; }
-        }
-    </style>
 </head>
 <body>
 
-    <header class="header">
+    <header class="header header--admin">
         <div class="header-brand">
             <img src="logo.svg" alt="FCAPT Logo" class="header-logo" onerror="this.onerror=null;this.src='logo.png';">
             <div class="header-brand-text">
@@ -80,7 +18,7 @@
         </div>
         <div class="header-actions">
             <button class="icon-btn" type="button" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle theme">🌓</button>
-            <button onclick="logout()" style="background:transparent; border:1px solid white; color:white; padding:6px 12px; cursor:pointer; border-radius:4px;">Logout</button>
+            <button type="button" class="btn-logout" onclick="logout()">Logout</button>
         </div>
     </header>
 
@@ -90,10 +28,10 @@
         <div class="tab" onclick="showTab('courses')">Course Management</div>
     </div>
 
-    <main class="container">
+    <main class="container container--admin">
         
         <section id="tab-system" class="card">
-            <h3>Semester Parameters</h3>
+            <h3 class="card-title">Semester Parameters</h3>
             <div class="grid">
                 <div class="form-group">
                     <label>Resumption Date</label>
@@ -108,7 +46,7 @@
         </section>
 
         <section id="tab-users" class="card hidden">
-            <h3>Add New Student / Lecturer</h3>
+            <h3 class="card-title">Add New Student / Lecturer</h3>
             <div class="grid">
                 <div class="form-group"><label>Full Name</label><input type="text" id="user_name"></div>
                 <div class="form-group"><label>ID / Reg Number</label><input type="text" id="user_id"></div>
@@ -143,7 +81,7 @@
 
         <section id="tab-courses" class="card hidden">
             <div id="course-form-container">
-                <h3 id="course-form-title">Create New Course</h3>
+                <h3 id="course-form-title" class="card-title">Create New Course</h3>
                 <input type="hidden" id="edit_course_id">
                 <div class="grid">
                     <div class="form-group"><label>Course Code</label><input type="text" id="c_code"></div>
@@ -154,10 +92,10 @@
                     </div>
                 </div>
                 <button class="btn-action" id="course-submit-btn" onclick="handleCourseSubmit()">Save Course</button>
-                <button class="btn-action hidden" id="cancel-edit-btn" onclick="resetCourseForm()" style="background:#64748b;">Cancel Edit</button>
+                <button class="btn-action btn-secondary hidden" id="cancel-edit-btn" onclick="resetCourseForm()">Cancel Edit</button>
             </div>
 
-            <h3 style="margin-top: 2.5rem;">Existing Course Registry</h3>
+            <h3 class="card-title card-title--spaced">Existing Course Registry</h3>
             <div class="table-wrap">
                 <table id="course-table">
                     <thead><tr><th>Code</th><th>Title</th><th>Lecturer</th><th>Action</th></tr></thead>
