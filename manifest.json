@@ -1,7 +1,7 @@
 {
-  "name": "Saudia Cloud Ticket Databse",
-  "short_name": "Saudia TDB",
-  "description": "Saudi Airline Ticket Database",
+  "name": "FCAPT Cloud Attendance",
+  "short_name": "FCAPT CAMS",
+  "description": "FCAPT Cloud Attendance",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#f0f2f0",
