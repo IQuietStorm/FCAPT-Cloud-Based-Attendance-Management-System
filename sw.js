@@ -1,4 +1,4 @@
-const CACHE_NAME = 'saudia-tms-v1';
+const CACHE_NAME = 'fcapt-cams-v1';
 const ASSETS = [
   'index.html',
   'logo.png',
