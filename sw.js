@@ -3,6 +3,7 @@ const ASSETS_TO_CACHE = [
   'index.html',
   'student_portal.html',
   'lecturer_dashboard.html',
+  'logo.svg',
   'logo.png',
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap',
   'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'
