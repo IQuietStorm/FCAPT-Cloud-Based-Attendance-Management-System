@@ -28,3 +28,11 @@ create table if not exists notifications (
 ```
 
 Enable **Realtime** for the `attendance` table in Supabase (Database → Replication) for instant toast alerts while the lecturer dashboard is open.
+
+## One check-in per course per week
+Students cannot mark presence twice for the same course in the same week (enforced in the student portal UI). For database-level protection, run:
+
+```sql
+create unique index if not exists attendance_student_course_week_unique
+  on attendance (student_id, course_id, week_number);
+```
