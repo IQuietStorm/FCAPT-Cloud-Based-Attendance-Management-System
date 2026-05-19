@@ -4,85 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lecturer Dashboard | FCAPT</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <style>
-        :root {
-            --fcapt-primary: #1e4620;
-            --fcapt-bg: #f8fafc;
-            --card-bg: #ffffff;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --border-color: #e2e8f0;
-            --danger: #be123c;
-            --success: #15803d;
-            --table-head-bg: #f8fafc;
-        }
-
-        [data-theme="dark"] {
-            --fcapt-bg: #0b1220;
-            --card-bg: #111c2e;
-            --text-main: #f1f5f9;
-            --text-muted: #a3b2c7;
-            --border-color: #22314a;
-            --table-head-bg: #0f172a;
-        }
-
-        body { font-family: 'Inter', sans-serif; background: var(--fcapt-bg); margin: 0; color: var(--text-main); }
-        .header { background: var(--fcapt-primary); color: white; padding: 1.2rem 2rem; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
-        .header-actions { display: flex; align-items: center; gap: 10px; }
-        .icon-btn { width: 40px; height: 40px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.7); background: transparent; color: white; cursor: pointer; }
-        .container { max-width: 1000px; margin: 2rem auto; padding: 0 20px; }
-        .card { background: var(--card-bg); padding: 25px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid var(--border-color); }
-        .table-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 10px; border: 1px solid var(--border-color); }
-        table { width: 100%; border-collapse: collapse; min-width: 720px; }
-        th, td { text-align: left; padding: 12px; border-bottom: 1px solid rgba(148,163,184,0.22); }
-        th { background: var(--table-head-bg); color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; }
-        .badge { padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: bold; }
-        .badge.danger { background: #fff1f2; color: var(--danger); }
-        .badge.success { background: #f0fdf4; color: var(--success); }
-
-        .filters {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            align-items: end;
-            margin: 14px 0 14px 0;
-        }
-        .filters .field { display: flex; flex-direction: column; gap: 6px; min-width: 180px; }
-        .filters label { font-size: 0.78rem; color: var(--text-muted); font-weight: 600; }
-        .filters select {
-            border: 1px solid var(--border-color);
-            background: var(--card-bg);
-            color: var(--text-main);
-            border-radius: 10px;
-            padding: 10px 12px;
-            outline: none;
-        }
-        .filters button {
-            border: 1px solid var(--border-color);
-            background: transparent;
-            color: var(--text-main);
-            border-radius: 10px;
-            padding: 10px 12px;
-            cursor: pointer;
-            height: 40px;
-        }
-
-        @media (max-width: 720px) {
-            .header { padding: 1rem 1rem; }
-            .container { margin: 1.25rem auto; padding: 0 12px; }
-            .card { padding: 16px; }
-        }
-    </style>
 </head>
-<body>
-    <header class="header">
+<body class="page-lecturer">
+    <header class="header header--portal">
         <div class="header-brand">
             <img src="logo.svg" alt="FCAPT Logo" class="header-logo" onerror="this.onerror=null;this.src='logo.png';">
             <div class="header-brand-text">
                 <h2 id="lec-name">...</h2>
-                <small id="week-info" style="opacity:0.9;">...</small>
+                <small id="week-info">...</small>
             </div>
         </div>
         <div class="header-actions">
@@ -96,12 +27,12 @@
                 </div>
             </div>
             <button class="icon-btn" type="button" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle theme">🌓</button>
-            <button onclick="logout()" style="background:none; border:1px solid white; color:white; padding:5px 10px; cursor:pointer; border-radius:4px;">Logout</button>
+            <button type="button" class="btn-logout" onclick="logout()">Logout</button>
         </div>
     </header>
     <main class="container">
         <div class="card">
-            <h3 style="margin-top:0; color:var(--fcapt-primary);">Student Attendance Report</h3>
+            <h3 class="card-title">Student Attendance Report</h3>
             <div class="filters" aria-label="Filters">
                 <div class="field">
                     <label for="filter-class">Class</label>
