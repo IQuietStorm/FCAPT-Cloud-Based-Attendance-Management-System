@@ -139,9 +139,16 @@
         const user = JSON.parse(localStorage.getItem('fcapt_user'));
         const notifications = [];
         let seenAttendanceKeys = new Set();
+        let seenNotificationIds = new Set();
         let courseById = {};
         let studentById = {};
         let myCourseIds = [];
+        let myCourseIdsRaw = [];
+        let dashboardReady = false;
+
+        function normId(id) {
+            return id == null ? '' : String(id).trim().toLowerCase();
+        }
 
         function setTheme(theme) {
             document.documentElement.setAttribute('data-theme', theme);
@@ -160,7 +167,13 @@
         })();
 
         function attendanceKey(record) {
-            return `${record.student_id}-${record.course_id}-${record.week_number}`;
+            if (record.id) return `id:${normId(record.id)}`;
+            return `${normId(record.student_id)}-${normId(record.course_id)}-${record.week_number}`;
+        }
+
+        function notificationKey(record) {
+            if (record.id) return normId(record.id);
+            return `${normId(record.student_id)}-${normId(record.course_id)}-${record.week_number}-${record.created_at || ''}`;
         }
 
         function formatNotificationTime(value) {
@@ -190,6 +203,13 @@
         }
 
         function pushPresenceNotification(studentName, courseCode, weekNumber, createdAt) {
+            const alreadyShown = notifications.some(n =>
+                n.studentName === studentName &&
+                n.courseCode === courseCode &&
+                String(n.weekNumber) === String(weekNumber)
+            );
+            if (alreadyShown) return;
+
             notifications.unshift({
                 studentName,
                 courseCode,
@@ -212,21 +232,46 @@
             setTimeout(() => toast.remove(), 5000);
         }
 
+        function handleNotificationRow(record, notifyNew) {
+            const key = notificationKey(record);
+            if (seenNotificationIds.has(key)) return;
+            seenNotificationIds.add(key);
+
+            if (!notifyNew) {
+                notifications.push({
+                    studentName: record.student_name || 'A student',
+                    courseCode: record.course_code || 'Course',
+                    weekNumber: record.week_number ?? '-',
+                    createdAt: record.created_at
+                });
+                return;
+            }
+
+            pushPresenceNotification(
+                record.student_name || 'A student',
+                record.course_code || 'Course',
+                record.week_number ?? '-',
+                record.created_at
+            );
+        }
+
         function registerAttendanceRecords(records, notifyNew) {
             records.forEach(record => {
+                const courseId = normId(record.course_id);
+                if (!myCourseIds.includes(courseId)) return;
+
                 const key = attendanceKey(record);
                 if (seenAttendanceKeys.has(key)) return;
                 seenAttendanceKeys.add(key);
 
                 if (!notifyNew) return;
 
-                const student = studentById[record.student_id];
-                const course = courseById[record.course_id];
-                if (!course) return;
+                const student = studentById[normId(record.student_id)] || studentById[record.student_id];
+                const course = courseById[courseId] || courseById[record.course_id];
 
                 pushPresenceNotification(
-                    student?.full_name || 'A student',
-                    course.course_code || 'Course',
+                    student?.full_name || record.student_name || 'A student',
+                    course?.course_code || record.course_code || 'Course',
                     record.week_number,
                     record.created_at
                 );
@@ -234,12 +279,26 @@
         }
 
         async function pollAttendanceNotifications() {
-            if (!myCourseIds.length) return;
-            const { data } = await supabaseClient
+            if (!myCourseIdsRaw.length) return;
+            const { data, error } = await supabaseClient
                 .from('attendance')
                 .select('*')
-                .in('course_id', myCourseIds);
-            if (data) registerAttendanceRecords(data, true);
+                .in('course_id', myCourseIdsRaw);
+            if (!error && data) registerAttendanceRecords(data, dashboardReady);
+        }
+
+        async function pollNotificationRows() {
+            const { data, error } = await supabaseClient
+                .from('notifications')
+                .select('*')
+                .eq('lecturer_id', user.id)
+                .eq('read', false)
+                .order('created_at', { ascending: false })
+                .limit(30);
+
+            if (error) return;
+            (data || []).forEach(row => handleNotificationRow(row, dashboardReady));
+            if (dashboardReady) renderNotifications();
         }
 
         async function loadStoredNotifications() {
@@ -252,15 +311,7 @@
                 .limit(20);
 
             if (error || !data) return;
-
-            data.forEach(n => {
-                notifications.push({
-                    studentName: n.student_name || 'A student',
-                    courseCode: n.course_code || 'Course',
-                    weekNumber: n.week_number || '-',
-                    createdAt: n.created_at
-                });
-            });
+            data.forEach(n => handleNotificationRow(n, false));
             renderNotifications();
         }
 
@@ -277,17 +328,50 @@
             dropdown.addEventListener('click', (e) => e.stopPropagation());
         }
 
-        function subscribeToAttendanceChanges() {
-            if (!myCourseIds.length) return;
+        function setupPresenceBroadcastListener() {
+            if (typeof BroadcastChannel === 'undefined') return;
+            const channel = new BroadcastChannel('fcapt-presence');
+            channel.onmessage = (event) => {
+                const msg = event.data || {};
+                if (normId(msg.lecturerId) !== normId(user.id)) return;
+                pushPresenceNotification(
+                    msg.studentName || 'A student',
+                    msg.courseCode || 'Course',
+                    msg.weekNumber ?? '-',
+                    msg.createdAt || new Date().toISOString()
+                );
+            };
+        }
 
-            supabaseClient
-                .channel(`lecturer-attendance-${user.id}`)
-                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'attendance' }, payload => {
-                    const record = payload.new;
-                    if (!myCourseIds.includes(record.course_id)) return;
-                    registerAttendanceRecords([record], true);
-                })
-                .subscribe();
+        function subscribeToLiveUpdates() {
+            const channel = supabaseClient.channel(`lecturer-live-${user.id}`);
+
+            if (myCourseIds.length) {
+                channel.on('postgres_changes', {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'attendance'
+                }, payload => {
+                    registerAttendanceRecords([payload.new], true);
+                });
+            }
+
+            channel.on('postgres_changes', {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'notifications',
+                filter: `lecturer_id=eq.${user.id}`
+            }, payload => {
+                handleNotificationRow(payload.new, true);
+            });
+
+            channel.subscribe((status) => {
+                if (status === 'SUBSCRIBED') console.log('[FCAPT] Live notifications connected');
+            });
+        }
+
+        async function refreshNotificationWatchers() {
+            await Promise.all([pollNotificationRows(), pollAttendanceNotifications()]);
         }
 
         async function init() {
@@ -306,21 +390,31 @@
             document.getElementById('week-info').innerText = `Total Semester Duration: ${totalWeeks} Weeks`;
 
             const { data: myCourses } = await supabaseClient.from('courses').select('*').eq('lecturer_id', user.id);
-            myCourseIds = (myCourses || []).map(c => c.id);
-            courseById = Object.fromEntries((myCourses || []).map(c => [c.id, c]));
+            myCourseIds = (myCourses || []).map(c => normId(c.id));
+            myCourseIdsRaw = (myCourses || []).map(c => c.id);
+            courseById = Object.fromEntries((myCourses || []).map(c => [normId(c.id), c]));
             let att = [];
-            if (myCourseIds.length) {
-                const { data: attendanceRows } = await supabaseClient.from('attendance').select('*').in('course_id', myCourseIds);
+            if (myCourseIdsRaw.length) {
+                const { data: attendanceRows } = await supabaseClient.from('attendance').select('*').in('course_id', myCourseIdsRaw);
                 att = attendanceRows || [];
             }
             const { data: students } = await supabaseClient.from('profiles').select('*').eq('role', 'student');
-            studentById = Object.fromEntries((students || []).map(s => [s.id, s]));
+            studentById = Object.fromEntries((students || []).flatMap(s => [
+                [normId(s.id), s],
+                [s.id, s]
+            ]));
 
             setupNotificationUi();
+            setupPresenceBroadcastListener();
             registerAttendanceRecords(att || [], false);
             await loadStoredNotifications();
-            subscribeToAttendanceChanges();
-            setInterval(pollAttendanceNotifications, 15000);
+            subscribeToLiveUpdates();
+            dashboardReady = true;
+            await refreshNotificationWatchers();
+            setInterval(refreshNotificationWatchers, 4000);
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) refreshNotificationWatchers();
+            });
 
             const tbody = document.getElementById('report-body');
             const fragment = document.createDocumentFragment();
