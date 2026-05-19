@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Console | FCAPT</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
     <style>
         :root {
             --fcapt-primary: #1e4620;
@@ -71,7 +72,12 @@
 <body>
 
     <header class="header">
-        <h2 style="margin:0">FCAPT Administrator</h2>
+        <div class="header-brand">
+            <img src="logo.svg" alt="FCAPT Logo" class="header-logo" onerror="this.onerror=null;this.src='logo.png';">
+            <div class="header-brand-text">
+                <h2>FCAPT Administrator</h2>
+            </div>
+        </div>
         <div class="header-actions">
             <button class="icon-btn" type="button" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle theme">🌓</button>
             <button onclick="logout()" style="background:transparent; border:1px solid white; color:white; padding:6px 12px; cursor:pointer; border-radius:4px;">Logout</button>
