@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Portal | FCAPT</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
     <style>
         :root {
             --fcapt-primary: #1e4620;
@@ -47,9 +48,12 @@
 </head>
 <body>
     <header class="header">
-        <div>
-            <h2 id="user-name" style="margin:0">...</h2>
-            <small id="profile-info" style="opacity:0.9;">...</small>
+        <div class="header-brand">
+            <img src="logo.svg" alt="FCAPT Logo" class="header-logo" onerror="this.onerror=null;this.src='logo.png';">
+            <div class="header-brand-text">
+                <h2 id="user-name">...</h2>
+                <small id="profile-info" style="opacity:0.9;">...</small>
+            </div>
         </div>
         <div class="header-actions">
             <button class="icon-btn" type="button" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle theme">🌓</button>
@@ -120,8 +124,43 @@
         }
         async function markAtt() {
             const cid = document.getElementById('course-select').value;
-            const { error } = await supabaseClient.from('attendance').insert([{ student_id: user.id, course_id: cid, week_number: currentWeek }]);
-            if(!error) { alert("Check-in recorded."); location.reload(); }
+            if (!cid) {
+                alert('Please choose a course before marking presence.');
+                return;
+            }
+
+            const { error } = await supabaseClient.from('attendance').insert([{
+                student_id: user.id,
+                course_id: cid,
+                week_number: currentWeek
+            }]);
+
+            if (error) {
+                alert(error.message || 'Could not record check-in.');
+                return;
+            }
+
+            const { data: course } = await supabaseClient
+                .from('courses')
+                .select('lecturer_id, course_code')
+                .eq('id', cid)
+                .single();
+
+            if (course?.lecturer_id) {
+                await supabaseClient.from('notifications').insert([{
+                    lecturer_id: course.lecturer_id,
+                    student_id: user.id,
+                    course_id: cid,
+                    student_name: user.full_name,
+                    course_code: course.course_code,
+                    week_number: currentWeek,
+                    message: `${user.full_name} marked presence for ${course.course_code} (Week ${currentWeek})`,
+                    read: false
+                }]);
+            }
+
+            alert('Check-in recorded.');
+            location.reload();
         }
         function logout() { localStorage.clear(); window.location.href = 'index.html'; }
         init();
