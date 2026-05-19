@@ -36,7 +36,7 @@
 
         .theme-toggle { position: fixed; bottom: 20px; right: 20px; width: 45px; height: 45px; border-radius: 50%; background: var(--fcapt-primary); color: white; border: none; cursor: pointer; z-index: 1000; }
 
-        .logo { height: 80px; margin-bottom: 15px; }
+        .logo { height: 80px; width: auto; max-width: 100%; object-fit: contain; display: block; margin: 0 auto 16px; }
 
     </style>
 
@@ -46,7 +46,7 @@
 
     <div class="card">
 
-        <img src="logo.png" alt="FCAPT Logo" class="logo">
+        <img src="logo.svg" alt="FCAPT Logo" class="logo" onerror="this.onerror=null;this.src='logo.png';">
 
         <h2 style="color: var(--fcapt-primary); margin-bottom: 20px;">FCAPT PORTAL | LOGIN</h2>
 
