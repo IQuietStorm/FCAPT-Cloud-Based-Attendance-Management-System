@@ -1,21 +1,24 @@
 {
-  "name": "FCAPT Cloud Attendance",
-  "short_name": "FCAPT CAMS",
-  "description": "FCAPT Cloud Attendance",
-  "start_url": "index.html",
-  "display": "standalone",
-  "background_color": "#f0f2f0",
-  "theme_color": "#009000",
+  "short_name": "FCAPT Portal",
+  "name": "FCAPT Cloud Attendance & Information Portal",
+  "description": "Secure cloud-based student attendance tracking and academic management system.",
   "icons": [
     {
       "src": "logo.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "logo.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
-  ]
+  ],
+  "start_url": "index.html",
+  "background_color": "#f8fafc",
+  "theme_color": "#1e4620",
+  "display": "standalone",
+  "orientation": "portrait-primary"
 }
