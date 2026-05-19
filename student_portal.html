@@ -157,6 +157,18 @@
                     message: `${user.full_name} marked presence for ${course.course_code} (Week ${currentWeek})`,
                     read: false
                 }]);
+
+                if (typeof BroadcastChannel !== 'undefined') {
+                    const channel = new BroadcastChannel('fcapt-presence');
+                    channel.postMessage({
+                        lecturerId: course.lecturer_id,
+                        studentName: user.full_name,
+                        courseCode: course.course_code,
+                        weekNumber: currentWeek,
+                        createdAt: new Date().toISOString()
+                    });
+                    channel.close();
+                }
             }
 
             alert('Check-in recorded.');
