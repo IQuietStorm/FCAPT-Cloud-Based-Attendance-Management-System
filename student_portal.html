@@ -4,71 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Portal | FCAPT</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <style>
-        :root {
-            --fcapt-primary: #1e4620;
-            --danger: #be123c;
-            --fcapt-bg: #f8fafc;
-            --card-bg: #ffffff;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --border-color: #e2e8f0;
-        }
-
-        [data-theme="dark"] {
-            --fcapt-bg: #0b1220;
-            --card-bg: #111c2e;
-            --text-main: #f1f5f9;
-            --text-muted: #a3b2c7;
-            --border-color: #22314a;
-        }
-
-        body { font-family: 'Inter', sans-serif; background: var(--fcapt-bg); margin: 0; color: var(--text-main); }
-        .header { background: var(--fcapt-primary); color: white; padding: 1.2rem 2rem; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
-        .header-actions { display: flex; align-items: center; gap: 10px; }
-        .icon-btn { width: 40px; height: 40px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.7); background: transparent; color: white; cursor: pointer; }
-        .container { max-width: 800px; margin: 2rem auto; padding: 0 20px; }
-        .card { background: var(--card-bg); padding: 25px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; border: 1px solid var(--border-color); }
-        .course-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid rgba(148,163,184,0.22); gap: 12px; }
-        .progress-bar { background: rgba(148,163,184,0.22); border-radius: 99px; height: 10px; width: 140px; overflow: hidden; margin-left: 10px; flex: 0 0 auto; }
-        .progress-inner { background: var(--fcapt-primary); height: 100%; transition: width 0.8s; }
-        select, .btn-mark { width: 100%; padding: 14px; margin-top: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-main); box-sizing: border-box; }
-        .btn-mark { background: var(--fcapt-primary); color: white; border: none; font-weight: 700; cursor: pointer; }
-
-        @media (max-width: 720px) {
-            .header { padding: 1rem 1rem; }
-            .container { margin: 1.25rem auto; padding: 0 12px; }
-            .card { padding: 16px; }
-            .course-item { flex-direction: column; align-items: flex-start; }
-            .progress-bar { width: 100%; margin-left: 0; }
-        }
-    </style>
 </head>
 <body>
-    <header class="header">
+    <header class="header header--portal">
         <div class="header-brand">
             <img src="logo.svg" alt="FCAPT Logo" class="header-logo" onerror="this.onerror=null;this.src='logo.png';">
             <div class="header-brand-text">
                 <h2 id="user-name">...</h2>
-                <small id="profile-info" style="opacity:0.9;">...</small>
+                <small id="profile-info">...</small>
             </div>
         </div>
         <div class="header-actions">
             <button class="icon-btn" type="button" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle theme">🌓</button>
-            <button onclick="logout()" style="background:none; border:1px solid white; color:white; padding:5px 10px; cursor:pointer; border-radius:4px;">Logout</button>
+            <button type="button" class="btn-logout" onclick="logout()">Logout</button>
         </div>
     </header>
-    <main class="container">
+    <main class="container container--narrow">
         <div class="card">
-            <h3 style="margin-top:0; color:var(--fcapt-primary);">My Attendance</h3>
+            <h3 class="card-title">My Attendance</h3>
             <div id="attendance-list">Loading...</div>
         </div>
         <div class="card">
-            <h3>Daily Check-in</h3>
+            <h3 class="card-title">Daily Check-in</h3>
+            <p id="checkin-hint" class="checkin-hint">Week —</p>
             <select id="course-select"><option value="">-- Choose Course --</option></select>
-            <button class="btn-mark" onclick="markAtt()">Mark Presence</button>
+            <button id="mark-btn" class="btn-mark" onclick="markAtt()">Mark Presence</button>
         </div>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -77,7 +39,13 @@
         const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvYmxpY3ZlcnFjaWprcWF0dmhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMTAyOTYsImV4cCI6MjA5MTY4NjI5Nn0.vV-rpPzniYgSTzBStfikL_SJc722-41ezkiJnI4nOPs';
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
         const user = JSON.parse(localStorage.getItem('fcapt_user'));
-        let currentWeek = 1; let totalWeeks = 12;
+        let currentWeek = 1;
+        let totalWeeks = 12;
+        let checkedCourseIdsThisWeek = new Set();
+
+        function hasCheckedInThisWeek(courseId) {
+            return checkedCourseIdsThisWeek.has(String(courseId));
+        }
 
         function setTheme(theme) {
             document.documentElement.setAttribute('data-theme', theme);
@@ -107,25 +75,69 @@
             currentWeek = Math.max(1, Math.ceil((new Date() - start) / (7 * 24 * 60 * 60 * 1000)));
 
             const { data: courses } = await supabaseClient.from('courses').select('*');
-            const { data: att } = await supabaseClient.from('attendance').select('course_id').eq('student_id', user.id);
+            const { data: att } = await supabaseClient
+                .from('attendance')
+                .select('course_id, week_number')
+                .eq('student_id', user.id);
+
+            checkedCourseIdsThisWeek = new Set(
+                (att || [])
+                    .filter(a => Number(a.week_number) === Number(currentWeek))
+                    .map(a => String(a.course_id))
+            );
             
             const list = document.getElementById('attendance-list');
             const sel = document.getElementById('course-select');
+            const markBtn = document.getElementById('mark-btn');
+            const checkinHint = document.getElementById('checkin-hint');
             list.innerHTML = '';
-            courses.forEach(c => {
-                const count = att.filter(a => a.course_id === c.id).length;
+            sel.innerHTML = '<option value="">-- Choose Course --</option>';
+
+            let availableCount = 0;
+            (courses || []).forEach(c => {
+                const count = (att || []).filter(a => a.course_id === c.id).length;
+                const checkedThisWeek = hasCheckedInThisWeek(c.id);
                 const p = Math.round((count / totalWeeks) * 100);
                 list.innerHTML += `<div class="course-item">
-                    <div><strong>${c.course_code}</strong><br>${p < 75 && currentWeek >= 9 ? '<span style="color:var(--danger); font-size:0.7rem;">SHORTFALL</span>' : ''}</div>
+                    <div><strong>${c.course_code}</strong><br>
+                    ${checkedThisWeek ? '<span class="week-checked">Checked in this week</span><br>' : ''}
+                    ${p < 75 && currentWeek >= 9 ? '<span style="color:var(--danger); font-size:0.7rem;">SHORTFALL</span>' : ''}</div>
                     <div style="display:flex; align-items:center;"><span>${p}%</span><div class="progress-bar"><div class="progress-inner" style="width:${p}%"></div></div></div>
                 </div>`;
-                sel.innerHTML += `<option value="${c.id}">${c.course_code}</option>`;
+                if (!checkedThisWeek) {
+                    sel.innerHTML += `<option value="${c.id}">${c.course_code}</option>`;
+                    availableCount++;
+                }
             });
+
+            checkinHint.textContent = availableCount
+                ? `Week ${currentWeek} — select a course you have not checked in for this week.`
+                : `Week ${currentWeek} — you have already checked in for all courses this week.`;
+            markBtn.disabled = availableCount === 0;
         }
         async function markAtt() {
             const cid = document.getElementById('course-select').value;
             if (!cid) {
                 alert('Please choose a course before marking presence.');
+                return;
+            }
+
+            if (hasCheckedInThisWeek(cid)) {
+                alert(`You have already checked in for this course in Week ${currentWeek}.`);
+                return;
+            }
+
+            const { data: existing } = await supabaseClient
+                .from('attendance')
+                .select('id')
+                .eq('student_id', user.id)
+                .eq('course_id', cid)
+                .eq('week_number', currentWeek)
+                .maybeSingle();
+
+            if (existing) {
+                checkedCourseIdsThisWeek.add(String(cid));
+                alert(`You have already checked in for this course in Week ${currentWeek}.`);
                 return;
             }
 
@@ -136,7 +148,10 @@
             }]);
 
             if (error) {
-                alert(error.message || 'Could not record check-in.');
+                const duplicate = error.code === '23505' || /duplicate|unique/i.test(error.message || '');
+                alert(duplicate
+                    ? `You have already checked in for this course in Week ${currentWeek}.`
+                    : (error.message || 'Could not record check-in.'));
                 return;
             }
 
