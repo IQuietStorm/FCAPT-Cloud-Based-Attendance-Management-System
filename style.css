@@ -96,14 +96,18 @@ th { background: rgba(0,0,0,0.02); color: var(--text-muted); font-size: 0.75rem;
 /* --- 6. BRAND / LOGO --- */
 .logo,
 .header-logo {
-    height: 56px;
     width: auto;
     object-fit: contain;
     display: block;
 }
 
+.header-logo {
+    height: 36px;
+}
+
 .logo {
-    margin: 0 auto 16px;
+    height: 48px;
+    margin: 0 auto 12px;
 }
 
 .header-brand {
